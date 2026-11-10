@@ -19,3 +19,5 @@ deployments/local.json
 deployments/polygon_amoy.json
 /dist/
 /.vercel/
+node_modules/
+*.py[cod]
