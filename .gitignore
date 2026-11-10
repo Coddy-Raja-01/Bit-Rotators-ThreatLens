@@ -1,23 +1,27 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
-.pytest_cache/
+﻿# Environment files
 .env
 .env.*
 !.env.example
-.DS_Store
+
+# Environments and dependencies
+.venv/
+dist/
+node_modules/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Logs and temporary files
 *.log
 *.tmp
-*.temp
+
+# SQLite databases (Threatlens)
 threatlens.db
 threatlens.db-shm
 threatlens.db-wal
+
+# Data feeds and local configurations
 data/openphish_feed.txt
 deployments/local.json
 deployments/polygon_amoy.json
-/dist/
-/.vercel/
-node_modules/
-*.py[cod]
