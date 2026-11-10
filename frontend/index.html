@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ThreatLens - Phishing & Certificate Trust Auditor</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
@@ -11,8 +12,15 @@
   <header class="site-header">
     <div class="container header-inner">
       <div class="brand-area">
-        <a href="#home" class="brand-title">ThreatLens</a>
-        <span class="brand-subtitle">Phishing & Certificate Trust Auditor</span>
+        <a href="#home" class="brand-mark" aria-label="ThreatLens home">
+          <svg class="brand-symbol" viewBox="0 0 40 40" aria-hidden="true">
+            <path d="M20 3.5 34 9v9.7c0 8.6-5.8 14.8-14 18.1C11.8 33.5 6 27.3 6 18.7V9l14-5.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+            <circle cx="18" cy="18" r="6.1" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            <path d="m22.5 22.5 5 5M18 14.8v6.4m-3.2-3.2h6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <span class="brand-title">ThreatLens</span>
+        </a>
+        <span class="brand-subtitle">Phishing &amp; TLS investigation</span>
       </div>
       <nav class="main-nav">
         <a href="#home" class="nav-link active" data-view="home">Scanner</a>
@@ -36,28 +44,25 @@
     <section class="view-section active" id="view-home">
       <div class="scan-box-section">
         <div class="scan-box-header">
-          <h2>Inspect Website for Phishing & Certificate Weaknesses</h2>
-          <p>
-            Evaluates threat heuristics, lookalike homoglyphs, HTTP response security headers, 
-            TLS cryptographic strength, and community verification in one unified audit.
-          </p>
+          <h2>Investigate a URL</h2>
+          <p>Check DNS, lookalikes, threat intelligence, HTTP headers, and TLS. Redirect and page-content checks require authorization.</p>
         </div>
         <form id="main-scan-form">
           <div class="scan-input-group">
-            <input type="text" id="scan-url-input" class="font-mono" placeholder="Enter target URL or domain (e.g. https://example.com or rnicrosoft.com)" required>
-            <button type="submit" class="btn-primary" id="btn-run-scan">Inspect URL</button>
+            <input type="text" id="scan-url-input" class="font-mono" placeholder="https://example.com or example.com" aria-label="URL or domain to investigate" required>
+            <button type="submit" class="btn-primary" id="btn-run-scan">Investigate</button>
           </div>
           <label for="scan-authorized-target" style="display:block; margin-top:10px; font-size:12px;">
             <input type="checkbox" id="scan-authorized-target">
-            I am authorized to request redirect and page-content inspection for this target.
+            I have permission to inspect this site’s redirects and page content.
           </label>
         </form>
         <div class="quick-examples">
-          <span>Quick test presets:</span>
-          <span class="link-tag" data-url="badssl.com">badssl.com (TLS Benchmark)</span>
-          <span class="link-tag" data-url="paypal.com">paypal.com (Clean Baseline)</span>
-          <span class="link-tag" data-url="http://rnicrosoft-login.net">rnicrosoft-login.net (Lookalike Squat)</span>
-          <span class="link-tag" data-url="http://chase-security-verify-auth.net/login.php">chase-security-verify-auth.net (Phishing Lure)</span>
+          <span>Try an example:</span>
+          <button type="button" class="link-tag" data-url="badssl.com" title="TLS test endpoint">TLS test</button>
+          <button type="button" class="link-tag" data-url="paypal.com" title="Known brand domain">Brand domain</button>
+          <button type="button" class="link-tag" data-url="http://rnicrosoft-login.net" title="Lookalike test domain">Lookalike</button>
+          <button type="button" class="link-tag" data-url="http://chase-security-verify-auth.net/login.php" title="Phishing test domain">Phishing test</button>
         </div>
       </div>
 
@@ -72,6 +77,8 @@
           <div class="stat-label">Verified Malicious Domains</div>
         </div>
       </div>
+
+      <div id="recent-scans-mount"></div>
 
       <!-- Live Scan Output Mount (When scan is active) -->
       <div id="scan-report-mount" style="display:none; margin-bottom: 24px;"></div>

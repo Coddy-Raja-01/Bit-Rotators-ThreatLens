@@ -1,6 +1,7 @@
 import { renderScanReport } from "./modules/scanner.js";
 import { initDatabaseView } from "./modules/database_view.js";
 import { initWatchlistView } from "./modules/watchlist.js";
+import { refreshRecentScans, saveRecentScan } from "./modules/recent_scans.js";
 
 // Global App State
 const state = {
@@ -17,6 +18,7 @@ const scanUrlInput = document.querySelector("#scan-url-input");
 const scanAuthorizedTarget = document.querySelector("#scan-authorized-target");
 const btnRunScan = document.querySelector("#btn-run-scan");
 const scanReportMount = document.querySelector("#scan-report-mount");
+const recentScansMount = document.querySelector("#recent-scans-mount");
 
 // Init application
 document.addEventListener("DOMContentLoaded", () => {
@@ -24,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   checkAuth();
   loadStats();
   setupScanForm();
+  refreshRecentScans(recentScansMount, loadRecentScan);
   setupSubmitThreatForm();
   setupAuthTabs();
 });
@@ -143,8 +146,8 @@ function setupScanForm() {
     triggerScan(url);
   });
 
-  // Setup quick preset links
-  document.querySelectorAll(".quick-examples span.link-tag").forEach(tag => {
+  // Setup quick example buttons
+  document.querySelectorAll(".quick-examples .link-tag").forEach(tag => {
     tag.addEventListener("click", () => {
       const url = tag.getAttribute("data-url");
       scanUrlInput.value = url;
@@ -155,14 +158,15 @@ function setupScanForm() {
 
 function triggerScan(rawUrl) {
   btnRunScan.disabled = true;
-  btnRunScan.textContent = "Auditing Target...";
+  btnRunScan.textContent = "Investigating…";
   scanReportMount.style.display = "block";
   scanReportMount.innerHTML = `
-    <div class="box" style="padding:20px; text-align:center;">
-      <h3 style="margin-bottom:6px;">Inspecting Target Website</h3>
-      <p style="color:#555; font-size:13px;">
-        Executing SSRF checks, testing lookalikes, tracing redirect hops, analyzing static content, and auditing TLS certificates...
-      </p>
+    <div class="box scan-loading" role="status" aria-live="polite">
+      <span class="scan-spinner" aria-hidden="true"></span>
+      <div>
+        <h3>Investigating target</h3>
+        <p>Validating the destination, then checking available signals. Authorized content checks may take longer.</p>
+      </div>
     </div>
   `;
   scanReportMount.scrollIntoView({ behavior: "smooth" });
@@ -184,6 +188,18 @@ function triggerScan(rawUrl) {
   .then(report => {
     state.currentScan = report;
     renderScanReport(scanReportMount, report);
+    let recentSaved = true;
+    try {
+      saveRecentScan(report);
+    } catch {
+      recentSaved = false;
+      const recentList = recentScansMount?.querySelector(".recent-scan-list");
+      if (recentList) {
+        recentList.setAttribute("role", "alert");
+        recentList.textContent = "This scan could not be saved to recent scans in this browser.";
+      }
+    }
+    if (recentSaved) refreshRecentScans(recentScansMount, loadRecentScan);
   })
   .catch(err => {
     scanReportMount.innerHTML = `
@@ -195,8 +211,26 @@ function triggerScan(rawUrl) {
   })
   .finally(() => {
     btnRunScan.disabled = false;
-    btnRunScan.textContent = "Inspect URL";
+    btnRunScan.textContent = "Investigate";
   });
+}
+
+async function loadRecentScan(reportId) {
+  try {
+    const response = await fetch(`/api/scan/${encodeURIComponent(reportId)}`);
+    const report = await response.json();
+    if (!response.ok) throw new Error(report.detail || "Could not open this saved scan.");
+    state.currentScan = report;
+    scanReportMount.style.display = "block";
+    renderScanReport(scanReportMount, report);
+    scanReportMount.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    const list = recentScansMount?.querySelector(".recent-scan-list");
+    if (list) {
+      list.setAttribute("role", "alert");
+      list.textContent = error.message;
+    }
+  }
 }
 
 // Setup Submit Threat Form
