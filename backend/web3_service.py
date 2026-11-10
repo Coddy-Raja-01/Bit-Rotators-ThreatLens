@@ -178,6 +178,7 @@ def _receipt_data(web3: Web3, receipt, record: dict, report_id: str) -> dict:
         "block_number": int(receipt.blockNumber),
         "timestamp": int(block.timestamp),
         "network": os.getenv("WEB3_NETWORK", f"Chain {web3.eth.chain_id}"),
+        "chain_id": int(web3.eth.chain_id),
         "contract_address": receipt.to,
         "explorer_url": None,
         "integrity_scope": "The chain proves this hash was recorded; it does not prove the report's claims are true.",

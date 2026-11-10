@@ -217,6 +217,31 @@ def generate_pdf_report(scan_data: dict) -> bytes:
     if cert.get("weak_key_analysis", {}).get("is_weak"):
         story.append(Paragraph(f"• <b>Weak Key Warning:</b> {', '.join(cert.get('weak_key_analysis', {}).get('reasons', []))}", body_style))
 
+    proof = scan_data.get("on_chain_commitment")
+    story.append(Paragraph("4. On-chain Proof", h2_style))
+    if proof:
+        proof_rows = [
+            ("Network", proof.get("network")),
+            ("Chain ID", proof.get("chain_id")),
+            ("Contract", proof.get("contract_address")),
+            ("Transaction", proof.get("tx_hash")),
+            ("Block", proof.get("block_number")),
+            ("Explorer", proof.get("explorer_url") or "No explorer URL configured"),
+            ("Report hash", proof.get("report_hash")),
+        ]
+        for label, value in proof_rows:
+            if value is not None:
+                story.append(Paragraph(f"• <b>{label}:</b> {value}", body_style))
+        story.append(Paragraph(
+            "The chain attests that a hash was recorded; it does not attest to the truth of the report.",
+            disclaimer_style
+        ))
+    else:
+        story.append(Paragraph(
+            "No on-chain commitment is attached to this report.",
+            disclaimer_style
+        ))
+
     story.append(Spacer(1, 20))
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#dddddd"), spaceAfter=8))
     story.append(Paragraph(

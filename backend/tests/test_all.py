@@ -41,6 +41,11 @@ from backend.web3_service import (
     submit_report_commitment,
     verify_report_integrity,
 )
+from backend.main import (
+    _create_session_token,
+    _read_session_user_id,
+    commit_report_integrity,
+)
 
 class ThreatLensTestSuite(unittest.TestCase):
 
@@ -153,6 +158,41 @@ class ThreatLensTestSuite(unittest.TestCase):
         report = {"target": {"hostname": "EXAMPLE.TEST"}, "unified_scoring": {"score": 5}}
         first_hashes = compute_report_hashes(report)
         self.assertEqual(first_hashes, compute_report_hashes(report))
+        report["on_chain_commitment"] = {"tx_hash": "0x" + "1" * 64}
+        self.assertEqual(first_hashes, compute_report_hashes(report))
+
+    def test_chain_commitment_is_persisted_with_assessment(self):
+        report = {
+            "report_id": "proof-test",
+            "target": {"normalized_url": "https://example.test", "hostname": "example.test"},
+            "unified_scoring": {"classification": "Suspicious", "score": 30},
+        }
+        receipt = {"success": True, "chain_id": 31337, "tx_hash": "0x" + "1" * 64}
+        with (
+            patch("backend.main.get_assessment", return_value=report),
+            patch("backend.main.submit_report_commitment", return_value=receipt),
+            patch("backend.main.save_assessment") as save_report,
+        ):
+            result = commit_report_integrity("proof-test")
+
+        self.assertEqual(result, receipt)
+        persisted = save_report.call_args.kwargs["report_dict"]
+        self.assertEqual(persisted["on_chain_commitment"], receipt)
+
+    def test_session_token_is_signed_and_rejects_legacy_predictable_tokens(self):
+        token = _create_session_token(42)
+        self.assertEqual(_read_session_user_id(token), 42)
+        self.assertIsNone(_read_session_user_id("42:sec_analyst"))
+        self.assertIsNone(_read_session_user_id("42"))
+        payload, signature = token.split(".", 1)
+        tampered = f"{payload[:-1]}{'A' if payload[-1] != 'A' else 'B'}.{signature}"
+        self.assertIsNone(_read_session_user_id(tampered))
+
+    def test_session_token_expires(self):
+        with patch("backend.main.time.time", return_value=1000):
+            token = _create_session_token(42)
+        with patch("backend.main.time.time", return_value=1000 + 12 * 60 * 60):
+            self.assertIsNone(_read_session_user_id(token))
 
     def test_deployed_contract_commit_verify_revise(self):
         import uuid

@@ -269,18 +269,14 @@ curl "http://127.0.0.1:8000/api/reports?limit=10"
           <h2 style="font-size:18px; margin-bottom:6px;">Sign In to ThreatLens</h2>
           <p style="color:#555; font-size:12px; margin-bottom:14px;">Access your domain watchlist, custom alerts, and API keys.</p>
 
-          <div style="background:#f0f0ee; border:1px solid #dcdcd8; padding:8px 10px; font-size:12px; margin-bottom:14px;">
-            Demo Credentials: <code class="font-mono">sec_analyst</code> / <code class="font-mono">ThreatLens2026!</code>
-          </div>
-
           <form id="form-login">
             <div style="margin-bottom:10px;">
-              <label style="display:block; font-size:12px; margin-bottom:2px;">Username or Email</label>
-              <input type="text" id="login-username" value="sec_analyst" required>
+              <label for="login-username" style="display:block; font-size:12px; margin-bottom:2px;">Username or Email</label>
+              <input type="text" id="login-username" autocomplete="username" required>
             </div>
             <div style="margin-bottom:14px;">
-              <label style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
-              <input type="password" id="login-password" value="ThreatLens2026!" required>
+              <label for="login-password" style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
+              <input type="password" id="login-password" autocomplete="current-password" required>
             </div>
             <button type="submit" class="btn-primary" style="width:100%;">Sign In</button>
           </form>
@@ -292,16 +288,16 @@ curl "http://127.0.0.1:8000/api/reports?limit=10"
 
           <form id="form-register">
             <div style="margin-bottom:10px;">
-              <label style="display:block; font-size:12px; margin-bottom:2px;">Username</label>
-              <input type="text" id="reg-username" required>
+              <label for="reg-username" style="display:block; font-size:12px; margin-bottom:2px;">Username</label>
+              <input type="text" id="reg-username" autocomplete="username" required>
             </div>
             <div style="margin-bottom:10px;">
-              <label style="display:block; font-size:12px; margin-bottom:2px;">Email Address</label>
-              <input type="email" id="reg-email" required>
+              <label for="reg-email" style="display:block; font-size:12px; margin-bottom:2px;">Email Address</label>
+              <input type="email" id="reg-email" autocomplete="email" required>
             </div>
             <div style="margin-bottom:14px;">
-              <label style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
-              <input type="password" id="reg-password" required>
+              <label for="reg-password" style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
+              <input type="password" id="reg-password" autocomplete="new-password" required>
             </div>
             <button type="submit" class="btn-primary" style="width:100%;">Create Account</button>
           </form>

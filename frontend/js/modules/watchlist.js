@@ -8,18 +8,14 @@ export function initWatchlistView(containerEl, currentUser, onRequireAuth) {
         <p style="color:#555; font-size:13px; margin-bottom:16px;">
           ThreatLens Watchlist continuously monitors domains on a schedule for certificate changes, impending expiration, and new community phishing reports.
         </p>
-        <div style="background:#f0f0ee; border:1px solid #dcdcd8; padding:10px; font-size:12px; margin-bottom:16px;">
-          <strong>Demo Analyst Credentials:</strong><br/>
-          Username: <code class="font-mono">sec_analyst</code> • Password: <code class="font-mono">ThreatLens2026!</code>
-        </div>
         <form id="inline-login-form">
           <div style="margin-bottom:10px;">
-            <label style="display:block; font-size:12px; margin-bottom:2px;">Username or Email</label>
-            <input type="text" id="inline-username" value="sec_analyst" required>
+            <label for="inline-username" style="display:block; font-size:12px; margin-bottom:2px;">Username or Email</label>
+            <input type="text" id="inline-username" autocomplete="username" required>
           </div>
           <div style="margin-bottom:14px;">
-            <label style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
-            <input type="password" id="inline-password" value="ThreatLens2026!" required>
+            <label for="inline-password" style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
+            <input type="password" id="inline-password" autocomplete="current-password" required>
           </div>
           <button type="submit" class="btn-primary" style="width:100%;">Sign In & Open Watchlist</button>
         </form>

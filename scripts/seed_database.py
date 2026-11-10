@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 from pathlib import Path
@@ -23,13 +24,15 @@ def seed():
         return
     conn.close()
 
-    print("Creating demo user account...")
-    try:
-        user = create_user("sec_analyst", "analyst@threatlens.local", "ThreatLens2026!")
+    demo_password = os.getenv("DEMO_PASSWORD", "")
+    user = None
+    if demo_password:
+        username = os.getenv("DEMO_USERNAME", "sec_analyst")
+        email = os.getenv("DEMO_EMAIL", "analyst@threatlens.local")
+        user = create_user(username, email, demo_password)
         print(f"Created demo user: {user['username']} (ID: {user['id']})")
-    except Exception as e:
-        print(f"User creation note: {e}")
-        user = {"id": 1}
+    else:
+        print("DEMO_PASSWORD is unset; seeding community reports without a demo account.")
 
     print("Seeding community threat reports...")
     sample_reports = [
@@ -90,22 +93,23 @@ def seed():
         for i in range(rep["disputes"]):
             vote_on_report(rep_id, f"198.51.100.{50 + i}", "dispute")
 
-    print("Seeding sample watchlist items...")
-    add_to_watchlist(user["id"], "chase.com")
-    add_to_watchlist(user["id"], "paypal.com")
-    add_to_watchlist(user["id"], "chase-security-verify-auth.net")
-
-    # Add an alert for the demo user
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO alerts (user_id, watchlist_id, domain, title, message, severity, is_read, created_at)
-        VALUES (?, 3, 'chase-security-verify-auth.net', 'Community Threat Alert',
-                'Domain on your watchlist was flagged and verified as a malicious banking phishing lure.',
-                'CRITICAL', 0, ?)
-    """, (user["id"], int(time.time())))
-    conn.commit()
-    conn.close()
+    if user:
+        print("Seeding sample watchlist items...")
+        watched = add_to_watchlist(user["id"], "chase-security-verify-auth.net")
+        if "id" in watched:
+            conn = get_db()
+            try:
+                conn.execute("""
+                    INSERT INTO alerts (user_id, watchlist_id, domain, title, message, severity, is_read, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    user["id"], watched["id"], watched["domain"], "Community Threat Alert",
+                    "Domain on your watchlist was flagged and verified as a malicious banking phishing lure.",
+                    "CRITICAL", 0, int(time.time()),
+                ))
+                conn.commit()
+            finally:
+                conn.close()
 
     print("Database seeding completed successfully.")
 

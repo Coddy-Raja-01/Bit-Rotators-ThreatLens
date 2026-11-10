@@ -183,10 +183,11 @@ export function renderScanReport(containerEl, report) {
       ${renderIntelSourceStatus(threat.external_intel?.sources || [])}
       ${renderAiModeStatus()}
       <div class="box">
-        <div class="box-title">Report Integrity</div>
+        <div class="box-title">Proof & Report Integrity</div>
         <p style="font-size:12px; color:#555;">
-          The deployed ThreatRegistry records report hashes and revision history. A chain commitment does not validate whether a report's claims are true.
+          A registry commitment proves that a report hash was recorded; it does not validate the report's claims. No proof is shown until a transaction is confirmed.
         </p>
+        <pre id="proof-status" style="white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px;"></pre>
         <button type="button" class="btn-secondary" id="btn-integrity-verify">Verify commitment</button>
         <button type="button" class="btn-secondary" id="btn-integrity-tamper">Simulate tampering</button>
         <pre id="integrity-status" style="white-space:pre-wrap; font-size:12px;"></pre>
@@ -428,6 +429,8 @@ export function renderScanReport(containerEl, report) {
   });
 
   const integrityStatus = containerEl.querySelector("#integrity-status");
+  const proofStatus = containerEl.querySelector("#proof-status");
+  proofStatus.textContent = formatProof(report.on_chain_commitment);
   loadAiModeStatus(containerEl);
 
   const commitBtn = containerEl.querySelector("#btn-integrity-commit");
@@ -439,7 +442,9 @@ export function renderScanReport(containerEl, report) {
       });
       const receipt = await response.json();
       if (!response.ok) throw new Error(receipt.detail || "Could not record report integrity.");
-      integrityStatus.textContent = `Recorded in ${receipt.network}: ${receipt.report_hash}\n${receipt.integrity_scope}`;
+      report.on_chain_commitment = receipt;
+      proofStatus.textContent = formatProof(receipt);
+      integrityStatus.textContent = "Commitment recorded. Export JSON or PDF to include this proof metadata.";
     } catch (error) {
       integrityStatus.textContent = error.message;
     } finally {
@@ -496,6 +501,20 @@ function downloadBlob(blob, filename) {
   link.download = filename;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function formatProof(proof) {
+  if (!proof) return "No commitment attached. Contact the configured registry when you choose to commit.";
+  return [
+    `Network: ${proof.network || "Unknown"}`,
+    `Chain ID: ${proof.chain_id ?? "Unknown"}`,
+    `Contract: ${proof.contract_address || "Unknown"}`,
+    `Transaction: ${proof.tx_hash || "Not available"}`,
+    `Block: ${proof.block_number ?? "Not available"}`,
+    `Explorer: ${proof.explorer_url || "No explorer URL configured"}`,
+    `Report hash: ${proof.report_hash || "Not available"}`,
+    proof.integrity_scope || "",
+  ].filter(Boolean).join("\n");
 }
 
 function renderLookalikeCard(lookalike) {

@@ -113,11 +113,11 @@ python3 -m pip install -r requirements.txt
 ```
 
 ### Step 2: Initialize Database and Seed Sample Data (Optional)
-To pre-populate demo community threat reports, a sample watchlist, and a demo security analyst account:
+To pre-populate demo community threat reports:
 ```bash
 python scripts/seed_database.py
 ```
-*Demo credentials: Username: `sec_analyst` | Password: `ThreatLens2026!`*
+Create an account in the application to use the watchlist. To seed a demo account, set a unique `DEMO_PASSWORD` in the environment before running the seeder.
 
 ### Step 3: Run the Application
 Start the app and local Anvil chain. The app deploys `ThreatRegistry.sol` automatically:
@@ -144,6 +144,8 @@ ThreatLens runs fully offline using local heuristics, trained models, and local 
    - `VIRUSTOTAL_API_KEY`: API key from VirusTotal.
    - `SAFE_BROWSING_API_KEY`: API key for Google Safe Browsing v4.
    - `PORT`: Change port if `8000` is in use.
+   - `SESSION_SECRET`: Set a unique random value for stable signed sessions; an unset value rotates sessions at each server restart.
+   - `CORS_ALLOWED_ORIGINS`: Comma-separated exact browser origins. Do not use `*` with credentialed requests.
 
 If left empty, ThreatLens degrades gracefully and performs all inspections with internal detectors.
 OpenPhish refreshes a disk cache at most hourly and falls back to the bundled CSV feed. Set `PHISHTANK_API_KEY` to enable the optional PhishTank check.

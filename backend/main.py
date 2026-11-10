@@ -1,4 +1,9 @@
+import base64
+import hashlib
+import hmac
+import json
 import os
+import secrets
 import time
 from pathlib import Path
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, Header, Query
@@ -10,6 +15,7 @@ from pydantic import BaseModel, HttpUrl
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from backend.config import load_env
 
 from backend.database import (
     init_db, get_db, create_user, authenticate_user, generate_api_key,
@@ -38,8 +44,39 @@ from backend.web3_service import (
 )
 
 # Initialize database on module load
+load_env()
 init_db()
 seed_demo_campaigns()
+_SESSION_SECRET = os.getenv("SESSION_SECRET", "").encode("utf-8") or secrets.token_bytes(32)
+_SESSION_TTL_SECONDS = 12 * 60 * 60
+
+
+def _create_session_token(user_id: int) -> str:
+    payload = json.dumps(
+        {"sub": user_id, "exp": int(time.time()) + _SESSION_TTL_SECONDS},
+        separators=(",", ":"),
+    ).encode("utf-8")
+    encoded_payload = base64.urlsafe_b64encode(payload).rstrip(b"=").decode("ascii")
+    signature = hmac.new(_SESSION_SECRET, encoded_payload.encode("ascii"), hashlib.sha256).digest()
+    encoded_signature = base64.urlsafe_b64encode(signature).rstrip(b"=").decode("ascii")
+    return f"{encoded_payload}.{encoded_signature}"
+
+
+def _read_session_user_id(token: str) -> int | None:
+    try:
+        encoded_payload, encoded_signature = token.split(".", 1)
+        signature = base64.urlsafe_b64decode(encoded_signature + "=" * (-len(encoded_signature) % 4))
+        expected = hmac.new(_SESSION_SECRET, encoded_payload.encode("ascii"), hashlib.sha256).digest()
+        if not hmac.compare_digest(signature, expected):
+            return None
+        payload_bytes = base64.urlsafe_b64decode(encoded_payload + "=" * (-len(encoded_payload) % 4))
+        payload = json.loads(payload_bytes)
+        user_id, expires_at = payload["sub"], payload["exp"]
+        if type(user_id) is not int or type(expires_at) is not int or expires_at <= time.time():
+            return None
+        return user_id
+    except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError):
+        return None
 
 def rate_limit_key(request: Request) -> str:
     """Rate limit key based on API Key if present, otherwise client IP."""
@@ -68,7 +105,14 @@ app.add_exception_handler(RegistryUnavailable, registry_unavailable_handler)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ALLOWED_ORIGINS",
+            "http://127.0.0.1:8000,http://localhost:8000",
+        ).split(",")
+        if origin.strip()
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -104,29 +148,17 @@ def get_current_user_optional(request: Request, authorization: str = Header(None
         if key_data:
             return {"id": key_data["user_id"], "username": key_data["username"], "email": key_data["email"]}
 
-    # Check simple session format (user_id:username:hash or integer id)
-    try:
-        if ":" in token:
-            parts = token.split(":")
-            user_id = int(parts[0])
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, username, email FROM users WHERE id = ?", (user_id,))
-            row = cursor.fetchone()
+    user_id = _read_session_user_id(token)
+    if user_id is not None:
+        conn = get_db()
+        try:
+            row = conn.execute(
+                "SELECT id, username, email FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            return dict(row) if row else None
+        finally:
             conn.close()
-            if row:
-                return dict(row)
-        else:
-            user_id = int(token)
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, username, email FROM users WHERE id = ?", (user_id,))
-            row = cursor.fetchone()
-            conn.close()
-            if row:
-                return dict(row)
-    except Exception:
-        pass
 
     return None
 
@@ -334,7 +366,22 @@ def commit_report_integrity(report_id: str):
     report = get_assessment(report_id)
     if not report:
         raise HTTPException(status_code=404, detail="Threat assessment report not found")
-    return submit_report_commitment(report)
+    commitment = {
+        **(report.get("on_chain_commitment") or {}),
+        **submit_report_commitment(report),
+    }
+    report["on_chain_commitment"] = commitment
+    target = report.get("target") or {}
+    scoring = report.get("unified_scoring") or {}
+    save_assessment(
+        report_id=report_id,
+        target_url=target.get("normalized_url") or target.get("input_url") or "",
+        domain=target.get("hostname") or "",
+        classification=scoring.get("classification") or "Inconclusive",
+        score=int(scoring.get("score") or 0),
+        report_dict=report,
+    )
+    return commitment
 
 @app.get("/api/chain/status")
 def chain_status():
@@ -442,26 +489,40 @@ def read_alerts(alert_id: int = Query(None), user = Depends(get_current_user_req
 # ----------------- Auth & Keys Endpoints -----------------
 
 @app.post("/api/auth/register")
-def register(req: RegisterRequest, response: Response):
+def register(req: RegisterRequest, response: Response, request: Request):
     """Create new account and set session cookie."""
     try:
         user = create_user(req.username, req.email, req.password)
     except Exception as e:
         raise HTTPException(status_code=400, detail="Username or email already in use.")
     
-    session_token = f"{user['id']}:{user['username']}"
-    response.set_cookie(key="tl_session", value=session_token, httponly=True, samesite="lax")
+    session_token = _create_session_token(user["id"])
+    response.set_cookie(
+        key="tl_session",
+        value=session_token,
+        httponly=True,
+        secure=request.url.scheme == "https",
+        samesite="lax",
+        max_age=_SESSION_TTL_SECONDS,
+    )
     return {"success": True, "user": user, "token": session_token}
 
 @app.post("/api/auth/login")
-def login(req: LoginRequest, response: Response):
+def login(req: LoginRequest, response: Response, request: Request):
     """Authenticate and obtain session token."""
     user = authenticate_user(req.username_or_email, req.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username/email or password.")
     
-    session_token = f"{user['id']}:{user['username']}"
-    response.set_cookie(key="tl_session", value=session_token, httponly=True, samesite="lax")
+    session_token = _create_session_token(user["id"])
+    response.set_cookie(
+        key="tl_session",
+        value=session_token,
+        httponly=True,
+        secure=request.url.scheme == "https",
+        samesite="lax",
+        max_age=_SESSION_TTL_SECONDS,
+    )
     return {"success": True, "user": user, "token": session_token}
 
 @app.post("/api/auth/logout")
