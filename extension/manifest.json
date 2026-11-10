@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "ThreatLens Local URL Inspector",
+  "version": "1.0.0",
+  "description": "Check a URL with your local ThreatLens instance.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Inspect with ThreatLens"
+  },
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ]
+}

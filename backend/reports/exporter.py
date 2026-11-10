@@ -200,7 +200,9 @@ def generate_pdf_report(scan_data: dict) -> bytes:
     cert = scan_data.get("certificate_validation", {})
     story.append(Paragraph("3. Web Security & Certificate Health", h2_style))
     
-    cert_text = "TLS Active" if cert.get("has_ssl") else "No TLS / Plaintext HTTP"
+    cert_text = "TLS handshake completed" if cert.get("has_ssl") else "No TLS / Plaintext HTTP"
+    cert_text += f"; chain validation: {cert.get('chain_validation', 'Not verified')}"
+    cert_text += f"; revocation: {cert.get('revocation', {}).get('status', 'Not verified')}"
     chain = cert.get("chain", [])
     if chain:
         leaf = chain[0]
@@ -208,6 +210,10 @@ def generate_pdf_report(scan_data: dict) -> bytes:
 
     story.append(Paragraph(f"• <b>HTTP Security Header Grade:</b> {web_sec.get('headers_grade')} ({web_sec.get('headers_score')}/100)", body_style))
     story.append(Paragraph(f"• <b>Certificate Status:</b> {cert_text}", body_style))
+    story.append(Paragraph(
+        "Certificate issuance and a valid chain do not establish that the website is legitimate. Revocation is reported as unverified unless checked.",
+        disclaimer_style
+    ))
     if cert.get("weak_key_analysis", {}).get("is_weak"):
         story.append(Paragraph(f"• <b>Weak Key Warning:</b> {', '.join(cert.get('weak_key_analysis', {}).get('reasons', []))}", body_style))
 

@@ -8,7 +8,7 @@ A phishing and malicious website detection platform that combines threat analysi
 
 The internet relies on trust in Certificate Authorities and secure transport. However, having a green padlock or active HTTPS does not prove a site is legitimate:
 - Phishing sites routinely obtain free TLS certificates.
-- Historical incidents—such as the eMudhra TLS certificate key-generation flaw—demonstrate that implementation bugs and weak random number generators can undermine encryption.
+- Public CA distrust incidents show why certificate provenance matters. A URL-only inspection cannot determine how a Certificate Authority generated private keys.
 - Existing tools are fragmented: an analyst must check one tool for DNS and typosquatting, another for HTTP security headers, a third for Certificate Transparency logs, and another for threat feeds.
 
 ThreatLens brings all four pillars into one unified assessment and produces a plain-English score and evidence breakdown.
@@ -19,8 +19,8 @@ ThreatLens brings all four pillars into one unified assessment and produces a pl
 
 1. **Unified Risk Score (0–100)**: Combines all four modules into a single score with a "Why this verdict" list explaining each piece of evidence and its score contribution.
 2. **Lookalike Domain & Homoglyph Detector**: Detects typosquatting, character omissions, visual substitutions (e.g. `rn` vs `m`, `0` vs `o`), and Unicode/Cyrillic homoglyphs against an offline database of 120+ top banks, payment processors, universities, and government portals. Displays side-by-side comparisons with differing characters highlighted.
-3. **Certificate Transparency (CT) Timeline**: Queries public CT logs for historical issuances and flags sudden spikes, wildcard certificates, and unexpected Certificate Authorities.
-4. **Weak Key & Algorithm Check**: Flags RSA keys smaller than 2048 bits, deprecated MD5/SHA-1 signatures, and warns about known shared-prime / weak-RNG failure patterns (eMudhra incident).
+3. **Certificate Transparency (CT) Timeline**: Queries public CT logs for historical issuance records and displays returned certificates.
+4. **Weak Key & Algorithm Check**: Flags RSA keys smaller than 2048 bits and deprecated MD5/SHA-1 signatures. It does not infer a CA's internal key-generation properties.
 5. **Redirect Chain Tracer**: Safely traces HTTP redirect hops, detects protocol downgrades (HTTPS -> HTTP), tracks cross-domain hops, and provides a 3D spatial path view.
 6. **Static Content Inspector**: Parses server-side HTML (without running untrusted JavaScript) to detect forms posting passwords to external domains, hidden 0-pixel iframes, obfuscated JavaScript, and social engineering text.
 7. **Security Header & TLS Grade**: Evaluates HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and cookie flags to assign an A–F grade.
@@ -213,7 +213,12 @@ All requests accept and return JSON. Authenticated endpoints accept `Authorizati
 - **Endpoint**: `GET /api/lookalike?domain=paypa1.com`
 - **Returns**: Suspicious domain, matched brand, canonical domain, diff segments, and similarity score.
 
-### 4. Community Threat Reports
+### 4. Intelligence and AI Status
+- **Intelligence sources**: `GET /api/intel/sources` returns provider configuration and cached OpenPhish freshness/record count.
+- **AI mode**: `GET /api/ai/status` reports the configured local, Ollama, or external provider mode.
+- URLhaus queries require `URLHAUS_API_KEY` (`Auth-Key`). Unconfigured sources are shown as unavailable, not clean.
+
+### 5. Community Threat Reports
 - **List Reports**: `GET /api/reports?category=banking&verified_only=true`
 - **Submit Report**: `POST /api/reports`
   ```bash
@@ -223,7 +228,7 @@ All requests accept and return JSON. Authenticated endpoints accept `Authorizati
   ```
 - **Vote on Report**: `POST /api/reports/{id}/vote` with `{"vote_type": "confirm"}` or `{"vote_type": "dispute"}`
 
-### 5. Watchlist & Alerts
+### 6. Watchlist & Alerts
 - **List Watched Domains**: `GET /api/watchlist`
 - **Add Domain**: `POST /api/watchlist` with `{"domain": "mybank.com"}`
 - **Delete Domain**: `DELETE /api/watchlist/{id}`
@@ -309,6 +314,8 @@ For a public network, set `THREAT_REGISTRY_ADDRESS` and `WEB3_RELAYER_PRIVATE_KE
 - **Limitations**:
   - Static analysis cannot detect payloads rendered solely through client-side React/Vue SPAs that make dynamic authenticated AJAX calls after execution.
   - RDAP and live threat-feed checks depend on external service availability; offline bundled threat indicators remain available when those services cannot be reached.
+  - TLS inspection reports the presented leaf certificate. If a trusted issuer cannot be established, chain status is `Not verified`; revocation is not checked and is never assumed good.
+  - A TLS handshake or valid certificate does not establish that a domain is legitimate. Incomplete chains are not filled with inferred intermediate or root certificates.
 - **Future Improvements**:
   - Sandboxed headless browser screenshot generator running inside an isolated container with no LAN access.
   - Automated BGP prefix hijacking and DNS route leak detection.

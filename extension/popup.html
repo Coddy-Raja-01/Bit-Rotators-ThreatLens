@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThreatLens URL Inspector</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; margin: 14px; min-width: 320px; color: #17212b; }
+    label { display: block; margin: 10px 0 5px; }
+    input[type="url"] { box-sizing: border-box; width: 100%; padding: 8px; }
+    button { margin-top: 12px; padding: 8px 12px; }
+    #result { margin-top: 12px; white-space: pre-wrap; }
+    .warning { color: #8a2c15; font-weight: 600; }
+    .muted { color: #555; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1 style="font-size:18px;">ThreatLens</h1>
+  <p class="muted">Inspection is sent to your local ThreatLens server. A low-risk result is not proof of legitimacy.</p>
+  <form id="scan-form">
+    <label for="url">URL to inspect</label>
+    <input id="url" type="url" placeholder="https://example.com" required>
+    <label>
+      <input id="authorized" type="checkbox">
+      I am authorized to request redirects and page-content inspection.
+    </label>
+    <button id="submit" type="submit">Inspect URL</button>
+  </form>
+  <div id="result" aria-live="polite"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

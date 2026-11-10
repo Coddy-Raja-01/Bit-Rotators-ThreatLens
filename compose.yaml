@@ -1,0 +1,26 @@
+services:
+  app:
+    build: .
+    command: ["python", "scripts/start_app.py"]
+    ports:
+      - "8000:8000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      THREATLENS_DB_PATH: /data/threatlens.db
+      WEB3_PROVIDER_URI: http://chain:8545
+      WEB3_NETWORK: Local Anvil Chain
+    depends_on:
+      - chain
+    volumes:
+      - threatlens-data:/data
+
+  chain:
+    image: ghcr.io/foundry-rs/foundry:latest
+    entrypoint: ["anvil"]
+    command: ["--host", "0.0.0.0"]
+    ports:
+      - "8545:8545"
+
+volumes:
+  threatlens-data:

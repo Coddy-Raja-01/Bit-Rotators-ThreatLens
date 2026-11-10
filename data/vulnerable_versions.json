@@ -1,0 +1,54 @@
+[
+  {
+    "product": "Apache",
+    "pattern": "Apache/([0-9.]+)",
+    "vulnerable_ranges": [
+      {"max": "2.4.49", "severity": "CRITICAL", "cve": "CVE-2021-41773", "summary": "Path traversal and remote code execution in Apache 2.4.49"},
+      {"max": "2.4.50", "severity": "CRITICAL", "cve": "CVE-2021-42013", "summary": "Path traversal and RCE bypass in Apache 2.4.50"},
+      {"max": "2.4.53", "severity": "HIGH", "cve": "CVE-2022-22720", "summary": "HTTP request smuggling and buffer overflow"}
+    ]
+  },
+  {
+    "product": "nginx",
+    "pattern": "nginx/([0-9.]+)",
+    "vulnerable_ranges": [
+      {"max": "1.20.0", "severity": "HIGH", "cve": "CVE-2021-23017", "summary": "1-byte memory overwrite in resolver leading to crash or code execution"},
+      {"max": "1.18.0", "severity": "MEDIUM", "cve": "CVE-2021-3618", "summary": "ALPACA TLS cross-protocol attack vulnerability"}
+    ]
+  },
+  {
+    "product": "OpenSSL",
+    "pattern": "OpenSSL/([0-9.a-z]+)",
+    "vulnerable_ranges": [
+      {"max": "1.0.1f", "severity": "CRITICAL", "cve": "CVE-2014-0160", "summary": "Heartbleed memory disclosure flaw"},
+      {"max": "1.1.1u", "severity": "HIGH", "cve": "CVE-2023-0464", "summary": "Certificate policy check verification bypass"},
+      {"max": "3.0.6", "severity": "HIGH", "cve": "CVE-2022-3602", "summary": "X.509 email address 4-byte buffer overflow"}
+    ]
+  },
+  {
+    "product": "PHP",
+    "pattern": "PHP/([0-9.]+)",
+    "vulnerable_ranges": [
+      {"max": "7.4.33", "severity": "HIGH", "cve": "EOL-UNSUPPORTED", "summary": "PHP 7.4 reached End of Life in Nov 2022 and no longer receives security fixes"},
+      {"max": "8.0.30", "severity": "HIGH", "cve": "EOL-UNSUPPORTED", "summary": "PHP 8.0 reached End of Life in Nov 2023 and has unpatched vulnerabilities"},
+      {"max": "8.1.28", "severity": "CRITICAL", "cve": "CVE-2024-4577", "summary": "CGI argument injection leading to arbitrary code execution on Windows"},
+      {"max": "8.2.19", "severity": "CRITICAL", "cve": "CVE-2024-4577", "summary": "CGI argument injection leading to arbitrary code execution on Windows"}
+    ]
+  },
+  {
+    "product": "Microsoft-IIS",
+    "pattern": "Microsoft-IIS/([0-9.]+)",
+    "vulnerable_ranges": [
+      {"max": "6.0", "severity": "CRITICAL", "cve": "CVE-2017-7269", "summary": "ScStoragePathFromUrl buffer overflow in WebDAV"},
+      {"max": "7.5", "severity": "HIGH", "cve": "EOL-UNSUPPORTED", "summary": "IIS 7.5 on Windows 7 / Server 2008 R2 is End of Life"}
+    ]
+  },
+  {
+    "product": "WordPress",
+    "pattern": "WordPress ([0-9.]+)",
+    "vulnerable_ranges": [
+      {"max": "5.8.3", "severity": "HIGH", "cve": "CVE-2022-21661", "summary": "SQL injection via WP_Query and object injection"},
+      {"max": "6.0.2", "severity": "HIGH", "cve": "CVE-2022-3590", "summary": "Unauthenticated blind SSRF in pingback mechanism"}
+    ]
+  }
+]

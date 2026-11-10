@@ -1,0 +1,14 @@
+indicator,indicator_type,threat_type,source,confidence,first_seen
+rnicrosoft-login.net,domain,phishing,URLhaus,0.95,2026-10-01
+chase-security-verify-auth.net,domain,phishing,OpenPhish,0.98,2026-10-05
+paypa1-account-update.com,domain,credential_harvesting,PhishTank,0.96,2026-10-10
+metamask-sync-wallet-restore.io,domain,crypto_drainer,Community Consensus,0.99,2026-10-12
+apple-id-cloud-verification.info,domain,phishing,URLhaus,0.94,2026-10-15
+wellsfargo-secure-login-alert.net,domain,banking_fraud,OpenPhish,0.97,2026-10-20
+netflix-billing-renew-portal.com,domain,card_theft,PhishTank,0.92,2026-10-22
+secure-login-bankofamerica.top,domain,phishing,URLhaus,0.98,2026-10-25
+http://rnicrosoft-login.net/login.php,url,phishing,URLhaus,0.98,2026-10-01
+http://chase-security-verify-auth.net/login.php,url,phishing,OpenPhish,0.99,2026-10-05
+http://paypa1-account-update.com/signin,url,credential_harvesting,PhishTank,0.96,2026-10-10
+http://metamask-sync-wallet-restore.io/index.html,url,crypto_drainer,Community,0.99,2026-10-12
+

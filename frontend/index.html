@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThreatLens - Phishing & Certificate Trust Auditor</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand-area">
+        <a href="#home" class="brand-title">ThreatLens</a>
+        <span class="brand-subtitle">Phishing & Certificate Trust Auditor</span>
+      </div>
+      <nav class="main-nav">
+        <a href="#home" class="nav-link active" data-view="home">Scanner</a>
+        <a href="#database" class="nav-link" data-view="database">Threat Database</a>
+        <a href="#submit" class="nav-link" data-view="submit">Report a Site</a>
+        <a href="#watchlist" class="nav-link" data-view="watchlist">Watchlist</a>
+        <a href="#learn" class="nav-link" data-view="learn">Learn & Cases</a>
+        <a href="#api" class="nav-link" data-view="api">API Docs</a>
+        <a href="#about" class="nav-link" data-view="about">About</a>
+      </nav>
+      <div class="auth-nav" id="header-auth-mount">
+        <!-- Rendered by auth state -->
+        <a href="#auth" class="nav-link" data-view="auth">Sign in / Register</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="min-height: 75vh;">
+    <!-- ================= VIEW 1: HOME (SCANNER) ================= -->
+    <section class="view-section active" id="view-home">
+      <div class="scan-box-section">
+        <div class="scan-box-header">
+          <h2>Inspect Website for Phishing & Certificate Weaknesses</h2>
+          <p>
+            Evaluates threat heuristics, lookalike homoglyphs, HTTP response security headers, 
+            TLS cryptographic strength, and community verification in one unified audit.
+          </p>
+        </div>
+        <form id="main-scan-form">
+          <div class="scan-input-group">
+            <input type="text" id="scan-url-input" class="font-mono" placeholder="Enter target URL or domain (e.g. https://example.com or rnicrosoft.com)" required>
+            <button type="submit" class="btn-primary" id="btn-run-scan">Inspect URL</button>
+          </div>
+          <label for="scan-authorized-target" style="display:block; margin-top:10px; font-size:12px;">
+            <input type="checkbox" id="scan-authorized-target">
+            I am authorized to request redirect and page-content inspection for this target.
+          </label>
+        </form>
+        <div class="quick-examples">
+          <span>Quick test presets:</span>
+          <span class="link-tag" data-url="badssl.com">badssl.com (TLS Benchmark)</span>
+          <span class="link-tag" data-url="paypal.com">paypal.com (Clean Baseline)</span>
+          <span class="link-tag" data-url="http://rnicrosoft-login.net">rnicrosoft-login.net (Lookalike Squat)</span>
+          <span class="link-tag" data-url="http://chase-security-verify-auth.net/login.php">chase-security-verify-auth.net (Phishing Lure)</span>
+        </div>
+      </div>
+
+      <!-- Platform Global Statistics -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number" id="stat-reports">--</div>
+          <div class="stat-label">Community Submissions</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="stat-verified" style="color:var(--safe-green)">--</div>
+          <div class="stat-label">Verified Malicious Domains</div>
+        </div>
+      </div>
+
+      <!-- Live Scan Output Mount (When scan is active) -->
+      <div id="scan-report-mount" style="display:none; margin-bottom: 24px;"></div>
+    </section>
+
+    <!-- ================= VIEW 2: THREAT DATABASE ================= -->
+    <section class="view-section" id="view-database">
+      <div id="database-view-mount"></div>
+    </section>
+
+    <!-- ================= VIEW 3: REPORT A SITE ================= -->
+    <section class="view-section" id="view-submit">
+      <div class="box" style="max-width: 640px; margin: 20px auto; padding: 24px;">
+        <h1 style="font-size:22px; margin-bottom:4px;">Report a Suspicious Website</h1>
+        <p style="color:#555; font-size:13px; margin-bottom:16px;">
+          Submit deceptive links, SMS smishing targets, fake job forms, or payment scams. 
+          Your report will be placed in the public database for community verification.
+        </p>
+
+        <form id="submit-threat-form">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Suspicious URL or Domain</label>
+            <input type="text" id="report-url" class="font-mono" placeholder="http://suspicious-target.com/login" required>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Threat Category</label>
+            <select id="report-category" required>
+              <option value="banking">Banking / Financial Institution Impersonation</option>
+              <option value="fake job offer">Fake Job Offer / Advance Fee Recruitment</option>
+              <option value="payment link">Payment Link / Fake Invoice / Parcel Redelivery</option>
+              <option value="university/government impersonation">University / Government Tax Portal</option>
+              <option value="other">Other Phishing or Malicious Website</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Description & Evidence Details</label>
+            <textarea id="report-description" rows="4" placeholder="How did you encounter this link? (e.g. SMS text claiming account lockout, Telegram recruiter demanding background fee, etc.)" required></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary" style="width:100%; padding:10px;">Submit Threat Report</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 4: WATCHLIST & ALERTS ================= -->
+    <section class="view-section" id="view-watchlist">
+      <div id="watchlist-view-mount"></div>
+    </section>
+
+    <!-- ================= VIEW 5: LEARN & CASES ================= -->
+    <section class="view-section" id="view-learn">
+      <div style="margin-bottom:16px;">
+        <h1>Awareness Guides & Technical Case Studies</h1>
+        <p style="color:#555; font-size:13px;">
+          Practical knowledge on how modern online fraud operates and why Certificate Authority validation matters.
+        </p>
+      </div>
+
+      <!-- Case Study: eMudhra Incident -->
+      <div class="box" style="border-left: 4px solid var(--primary-blue);">
+        <div class="box-title" style="font-size:17px; color:var(--primary-blue);">
+          Case Study: The eMudhra TLS Certificate Key-Generation Flaw
+        </div>
+        <p style="font-size:12px; color:#666; margin-bottom:10px;">
+          <em>Factual summary based on public security disclosures and CA/Browser Forum reports (2022–2023).</em>
+        </p>
+        <div style="font-size:13px; line-height:1.6; color:#222;">
+          <p style="margin-bottom:8px;">
+            In 2022 and 2023, independent security researchers auditing public Certificate Transparency (CT) logs discovered 
+            a critical flaw in TLS certificates issued by eMudhra, a commercial Certificate Authority based in India. 
+            The weakness originated in an automated certificate enrollment and key-generation process that relied on 
+            flawed or insufficiently seeded pseudo-random number generation (PRNG).
+          </p>
+          <p style="margin-bottom:8px;">
+            <strong>The Mathematical Vulnerability (Shared Prime Factors):</strong><br/>
+            RSA cryptography relies on the mathematical difficulty of factoring a large composite modulus <code>n = p * q</code> 
+            into its secret constituent prime factors <code>p</code> and <code>q</code>. If the random number generator is defective, 
+            two distinct certificates issued to completely different domains may accidentally share one prime factor (e.g. <code>p</code>). 
+            Using the classical Euclidean algorithm to compute the Greatest Common Divisor:
+          </p>
+          <div style="background:#f0f0ee; padding:8px 12px; font-family:var(--font-mono); font-size:12px; margin:8px 0; border:1px solid #dcdcd8;">
+            gcd(Modulus_A, Modulus_B) = Shared Prime Factor p
+          </div>
+          <p style="margin-bottom:8px;">
+            A passive eavesdropper reading Certificate Transparency logs can compute the GCD in milliseconds on a standard laptop, 
+            instantly deriving the private keys for both certificates without breaking RSA mathematically. 
+            This allows total TLS interception, decryption of user sessions, and transparent impersonation.
+          </p>
+          <p>
+            <strong>Why Certificate Validation Matters:</strong><br/>
+            This incident underscores that having an active HTTPS padlock is not synonymous with trust. 
+            Continuous auditing of certificate chains, key generation quality, Certificate Transparency logs, 
+            and revocation status is required to protect internet users from compromised trust chains.
+          </p>
+        </div>
+      </div>
+
+      <!-- Awareness Guides -->
+      <div class="box">
+        <div class="box-title">Understanding Typosquatting & Homoglyph Spoofing</div>
+        <p style="font-size:13px; color:#333; margin-bottom:8px;">
+          Attackers exploit visual similarities between characters to fool human eyes:
+        </p>
+        <ul style="padding-left:20px; font-size:13px; color:#444; margin-bottom:10px;">
+          <li><strong>Character Pairs:</strong> Using the letters <code>rn</code> (r followed by n) to mimic the letter <code>m</code> (e.g. <code>rnicrosoft.com</code>).</li>
+          <li><strong>Numeric Substitutions:</strong> Replacing the letter <code>o</code> with the number <code>0</code> or <code>l</code> with <code>1</code> (e.g. <code>paypa1.com</code>).</li>
+          <li><strong>Unicode Homoglyphs:</strong> Registering Internationalized Domain Names (IDN) using Cyrillic characters (like Cyrillic small 'а' U+0430) that render identically to Latin 'a' in browser address bars.</li>
+          <li><strong>Keyword Squatting:</strong> Affixing words like <code>-security</code>, <code>-auth</code>, <code>-portal</code>, or <code>-verify</code> to trusted brand names.</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="box-title">Fake Recruitment & Advance-Fee Employment Scams</div>
+        <p style="font-size:13px; color:#333; margin-bottom:8px;">
+          A growing vector where job seekers are contacted via Telegram, WhatsApp, or unsolicited email claiming to offer high-paying remote roles:
+        </p>
+        <ul style="padding-left:20px; font-size:13px; color:#444;">
+          <li>Directs victims to spoofed applicant portals designed to harvest identity documents, Social Security Numbers, and bank details.</li>
+          <li>Requests upfront fees for "onboarding software", "identity verification checks", or "home office equipment" payable via cryptocurrency or gift cards.</li>
+          <li>ThreatLens static inspection looks for keyword combinations such as daily payout lures, task-based investment claims, and external submission forms.</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="box-title">Postal Redelivery & SMS Smishing Lures</div>
+        <p style="font-size:13px; color:#333;">
+          Fraudulent SMS messages claiming an overdue toll violation (E-ZPass, SunPass) or undelivered postal package (USPS, FedEx, DHL). 
+          The pages ask for a nominal fee (e.g. $1.50) to steal credit card numbers, CVV codes, and billing addresses.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 6: API DOCS ================= -->
+    <section class="view-section" id="view-api">
+      <div style="margin-bottom:16px;">
+        <h1>ThreatLens REST API Documentation</h1>
+        <p style="color:#555; font-size:13px;">
+          Integrate ThreatLens detection and certificate auditing into your own applications, SIEM, or security pipelines.
+        </p>
+      </div>
+
+      <div class="box">
+        <div class="box-title">API Authentication</div>
+        <p style="font-size:13px; color:#444; margin-bottom:10px;">
+          Public endpoints (like looking up community reports) are open. 
+          Automated scans and programmatic lookups support authentication via an API Key:
+        </p>
+        <div style="background:#f0f0ee; padding:8px 12px; font-family:var(--font-mono); font-size:12px; margin-bottom:12px; border:1px solid #dcdcd8;">
+          Authorization: Bearer tl_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        </div>
+        <div id="api-key-manager-mount">
+          <!-- Populated by script -->
+          <button class="btn-secondary" id="btn-create-api-key">Generate API Key (Requires Login)</button>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">POST /api/scan</div>
+        <p style="font-size:13px; color:#444; margin-bottom:8px;">Runs a full threat scan on the submitted URL and returns the unified report.</p>
+        <div style="background:#222; color:#eee; padding:10px; font-family:var(--font-mono); font-size:12px; border-radius:2px; margin-bottom:8px;">
+curl -X POST "http://127.0.0.1:8000/api/scan" \<br/>
+&nbsp;&nbsp;-H "Content-Type: application/json" \<br/>
+&nbsp;&nbsp;-d '{"url": "http://rnicrosoft-login.net"}'
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">GET /api/lookalike?domain={domain}</div>
+        <p style="font-size:13px; color:#444; margin-bottom:8px;">Inspects a specific domain against typosquatting, homoglyphs, and known brand names.</p>
+        <div style="background:#222; color:#eee; padding:10px; font-family:var(--font-mono); font-size:12px; border-radius:2px;">
+curl "http://127.0.0.1:8000/api/lookalike?domain=paypa1-update.com"
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">GET /api/reports</div>
+        <p style="font-size:13px; color:#444; margin-bottom:8px;">Lists community threat reports with optional query filters (<code>?category=banking&verified_only=true</code>).</p>
+        <div style="background:#222; color:#eee; padding:10px; font-family:var(--font-mono); font-size:12px; border-radius:2px;">
+curl "http://127.0.0.1:8000/api/reports?limit=10"
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 7: AUTH (LOGIN / REGISTER) ================= -->
+    <section class="view-section" id="view-auth">
+      <div style="max-width: 480px; margin: 30px auto;">
+        <div class="tab-navigation" style="margin-top:0;">
+          <button class="tab-btn active" id="auth-tab-login">Sign In</button>
+          <button class="tab-btn" id="auth-tab-register">Register Account</button>
+        </div>
+
+        <div class="box" id="auth-login-box" style="border-top:none; padding:20px;">
+          <h2 style="font-size:18px; margin-bottom:6px;">Sign In to ThreatLens</h2>
+          <p style="color:#555; font-size:12px; margin-bottom:14px;">Access your domain watchlist, custom alerts, and API keys.</p>
+
+          <div style="background:#f0f0ee; border:1px solid #dcdcd8; padding:8px 10px; font-size:12px; margin-bottom:14px;">
+            Demo Credentials: <code class="font-mono">sec_analyst</code> / <code class="font-mono">ThreatLens2026!</code>
+          </div>
+
+          <form id="form-login">
+            <div style="margin-bottom:10px;">
+              <label style="display:block; font-size:12px; margin-bottom:2px;">Username or Email</label>
+              <input type="text" id="login-username" value="sec_analyst" required>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
+              <input type="password" id="login-password" value="ThreatLens2026!" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;">Sign In</button>
+          </form>
+        </div>
+
+        <div class="box" id="auth-register-box" style="border-top:none; padding:20px; display:none;">
+          <h2 style="font-size:18px; margin-bottom:6px;">Create a New Account</h2>
+          <p style="color:#555; font-size:12px; margin-bottom:14px;">Set up continuous domain monitoring and API access.</p>
+
+          <form id="form-register">
+            <div style="margin-bottom:10px;">
+              <label style="display:block; font-size:12px; margin-bottom:2px;">Username</label>
+              <input type="text" id="reg-username" required>
+            </div>
+            <div style="margin-bottom:10px;">
+              <label style="display:block; font-size:12px; margin-bottom:2px;">Email Address</label>
+              <input type="email" id="reg-email" required>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12px; margin-bottom:2px;">Password</label>
+              <input type="password" id="reg-password" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;">Create Account</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIEW 8: ABOUT, PRIVACY & TERMS ================= -->
+    <section class="view-section" id="view-about">
+      <div style="margin-bottom:16px;">
+        <h1>About ThreatLens</h1>
+        <p style="color:#555; font-size:13px;">
+          Built to combine threat heuristics, web security posture, certificate validation, and community intelligence in one place.
+        </p>
+      </div>
+
+      <div class="box">
+        <div class="box-title">Design Philosophy & Architecture</div>
+        <p style="font-size:13px; color:#333; margin-bottom:8px;">
+          Existing threat scanners are typically fragmented: one tool looks only at DNS, another checks headers, 
+          and third-party Certificate Authority dashboards operate independently. 
+          ThreatLens brings all four pillars into a single unified report.
+        </p>
+        <p style="font-size:13px; color:#333;">
+          To ensure clarity and high utility, the user interface rejects cosmetic gimmicks, marketing slogans, and unnecessary decoration. 
+          It prioritizes straightforward data presentation, plain language explanations, and verifiable evidence.
+        </p>
+      </div>
+
+      <div class="box">
+        <div class="box-title">Important Legal & Technical Disclaimer</div>
+        <p style="font-size:13px; color:#444; line-height:1.6;">
+          ThreatLens security scan results represent automated indicators and probabilistic heuristics derived from static inspection, 
+          domain comparison, and public certificate databases. They are designed as diagnostic aids for security analysts and internet users. 
+          A low risk score is not an absolute warranty of domain safety, and a high risk score does not represent a legal determination of criminality. 
+          Always verify identities independently before submitting sensitive credentials or financial information.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>ThreatLens Security Platform</strong> • All four threat pillars in one report.
+      </div>
+      <div class="footer-links">
+        <a href="#about">About & Methodology</a>
+        <a href="#api">API Documentation</a>
+        <a href="#learn">Case Studies</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vendor Scripts (Locally Bundled) -->
+  <script src="/static/js/vendor/three.min.js"></script>
+  <!-- Application Script -->
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

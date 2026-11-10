@@ -9,3 +9,9 @@ __pycache__/
 *.log
 *.tmp
 *.temp
+threatlens.db
+threatlens.db-shm
+threatlens.db-wal
+data/openphish_feed.txt
+deployments/local.json
+deployments/polygon_amoy.json

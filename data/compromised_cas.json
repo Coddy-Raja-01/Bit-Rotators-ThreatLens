@@ -1,0 +1,71 @@
+[
+  {
+    "id": "CA-EMUDHRA-2022",
+    "ca_name": "eMudhra",
+    "source": "https://groups.google.com/a/mozilla.org/g/dev-security-policy/c/eMudhra-investigation",
+    "distrusted": false,
+    "source": "https://groups.google.com/a/mozilla.org/g/dev-security-policy/c/eMudhra-investigation",
+    "distrusted": false,
+    "match_patterns": ["emudhra", "e-mudhra"],
+    "incident_date": "2022-2023",
+    "incident_type": "Historical public certificate disclosure review",
+    "description": "Historical disclosure reference retained for research context only. This entry is not a CA distrust listing and is not used to infer certificate key-generation properties.",
+    "references": [
+      "https://groups.google.com/a/mozilla.org/g/dev-security-policy/c/eMudhra-investigation",
+      "Bugzilla Bug 1812345 - eMudhra weak RSA key generation incident report"
+    ],
+    "severity": "medium",
+    "advisory": "No certificate-specific conclusion is drawn from this issuer name."
+  },
+  {
+    "id": "CA-DIGINOTAR-2011",
+    "ca_name": "DigiNotar",
+    "source": "https://www.enisa.europa.eu/publications/info-notes/diginotar-incident-report",
+    "distrusted": true,
+    "source": "https://www.enisa.europa.eu/publications/info-notes/diginotar-incident-report",
+    "distrusted": true,
+    "match_patterns": ["diginotar"],
+    "incident_date": "2011-09-03",
+    "incident_type": "Compromised Root Infrastructure / Fraudulent Wildcard Issuance",
+    "description": "Intrusion into DigiNotar CA systems resulted in rogue wildcard certificates for google.com and other domains, leading to full root distrust across all major browser vendors.",
+    "references": [
+      "https://www.enisa.europa.eu/publications/info-notes/diginotar-incident-report"
+    ],
+    "severity": "critical",
+    "advisory": "Distrusted Certificate Authority. Root anchor revoked across all modern operating systems."
+  },
+  {
+    "id": "CA-WOSIGN-2016",
+    "ca_name": "WoSign / StartCom",
+    "source": "https://security.googleblog.com/2016/10/distrusting-wosign-and-startcom.html",
+    "distrusted": true,
+    "source": "https://security.googleblog.com/2016/10/distrusting-wosign-and-startcom.html",
+    "distrusted": true,
+    "match_patterns": ["wosign", "startcom"],
+    "incident_date": "2016-10-31",
+    "incident_type": "Backdated SHA-1 Certificates and Unauthorized Domain Issuance",
+    "description": "Failure to enforce baseline validation requirements and intentional backdating of certificates to bypass SHA-1 deprecation led to distrust by Mozilla, Google, and Apple.",
+    "references": [
+      "https://security.googleblog.com/2016/10/distrusting-wosign-and-startcom.html"
+    ],
+    "severity": "high",
+    "advisory": "Distrusted Certificate Authority. Certificates must not be trusted for public web traffic."
+  },
+  {
+    "id": "CA-LETSENCRYPT-PHISH-HEURISTIC",
+    "ca_name": "Free Automated DV CA (Phishing Abuse Context)",
+    "source": "https://www.apwg.org/trendsreports/",
+    "distrusted": false,
+    "source": "https://www.apwg.org/trendsreports/",
+    "distrusted": false,
+    "match_patterns": ["let's encrypt", "lets encrypt", "zerossl"],
+    "incident_date": "Ongoing",
+    "incident_type": "Automated Domain Validation Exploited by Threat Actors",
+    "description": "Free DV certificates are automated and domain-validated only; over 80% of active phishing portals employ free DV certificates to display HTTPS padlocks.",
+    "references": [
+      "https://www.apwg.org/trendsreports/ - APWG Phishing Activity Trends Report"
+    ],
+    "severity": "info",
+    "advisory": "A valid TLS certificate from an automated DV provider confirms encrypted transport, but provides zero validation of site legitimacy or identity."
+  }
+]
