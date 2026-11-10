@@ -388,6 +388,14 @@ def chain_status():
     """Report the live RPC and deployed ThreatRegistry contract status."""
     return get_registry_status()
 
+@app.get("/api/chain/status/availability")
+def chain_status_availability():
+    """Return registry availability without turning an optional offline chain into an HTTP error."""
+    try:
+        return get_registry_status()
+    except RegistryUnavailable:
+        return {"connected": False}
+
 @app.post("/api/chain/verify/{report_id}")
 def verify_report_commitment(report_id: str, simulated_tampering: bool = Query(False)):
     """Verify a local report commitment, optionally demonstrating tamper detection."""

@@ -25,11 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupRouting();
   checkAuth();
   loadStats();
+  loadRegistryStatus();
   setupScanForm();
   refreshRecentScans(recentScansMount, loadRecentScan);
   setupSubmitThreatForm();
   setupAuthTabs();
 });
+
+document.querySelector("#btn-refresh-registry")?.addEventListener("click", loadRegistryStatus);
 
 // Routing
 function setupRouting() {
@@ -137,6 +140,39 @@ function loadStats() {
     .catch(() => {});
 }
 
+async function loadRegistryStatus() {
+  const statusEl = document.querySelector("#registry-status");
+  const metadataEl = document.querySelector("#registry-metadata");
+  if (!statusEl || !metadataEl) return;
+
+  statusEl.textContent = "Checking registry connection…";
+  statusEl.className = "registry-state";
+  metadataEl.textContent = "";
+  try {
+    const response = await fetch("/api/chain/status/availability");
+    const data = await response.json();
+    if (!response.ok) throw new Error("Status could not be checked.");
+    if (!data.connected) {
+      statusEl.textContent = "Not connected · Registry unavailable";
+      statusEl.classList.add("is-disconnected");
+      metadataEl.textContent = "On-chain commits need a deployed registry and configured RPC. Scanning and report export remain available.";
+      return;
+    }
+
+    statusEl.textContent = `Connected · ${data.network || "EVM network"}`;
+    statusEl.classList.add("is-connected");
+    metadataEl.textContent = [
+      `Chain ID ${data.chain_id}`,
+      `Contract ${data.contract_address}`,
+      `${data.report_count} committed report${data.report_count === 1 ? "" : "s"}`,
+    ].join("  ·  ");
+  } catch {
+    statusEl.textContent = "Not connected · Registry unavailable";
+    statusEl.classList.add("is-disconnected");
+    metadataEl.textContent = "On-chain commits need a deployed registry and configured RPC. Scanning and report export remain available.";
+  }
+}
+
 // Setup Main Scan Form
 function setupScanForm() {
   mainScanForm?.addEventListener("submit", (e) => {
@@ -224,7 +260,7 @@ async function loadRecentScan(reportId) {
     scanReportMount.style.display = "block";
     renderScanReport(scanReportMount, report);
     scanReportMount.scrollIntoView({ behavior: "smooth", block: "start" });
-  } catch (error) {
+  } catch {
     const list = recentScansMount?.querySelector(".recent-scan-list");
     if (list) {
       list.setAttribute("role", "alert");

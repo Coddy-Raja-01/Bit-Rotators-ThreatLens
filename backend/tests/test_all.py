@@ -42,6 +42,7 @@ from backend.web3_service import (
     verify_report_integrity,
 )
 from backend.main import (
+    app,
     _create_session_token,
     _read_session_user_id,
     commit_report_integrity,
@@ -193,6 +194,15 @@ class ThreatLensTestSuite(unittest.TestCase):
             token = _create_session_token(42)
         with patch("backend.main.time.time", return_value=1000 + 12 * 60 * 60):
             self.assertIsNone(_read_session_user_id(token))
+
+    def test_chain_availability_endpoint_is_successful_when_optional_chain_is_offline(self):
+        from fastapi.testclient import TestClient
+
+        with patch("backend.main.get_registry_status", side_effect=RegistryUnavailable("offline")):
+            response = TestClient(app).get("/api/chain/status/availability")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"connected": False})
 
     def test_deployed_contract_commit_verify_revise(self):
         import uuid

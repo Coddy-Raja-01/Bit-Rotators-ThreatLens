@@ -15,8 +15,9 @@
         <a href="#home" class="brand-mark" aria-label="ThreatLens home">
           <svg class="brand-symbol" viewBox="0 0 40 40" aria-hidden="true">
             <path d="M20 3.5 34 9v9.7c0 8.6-5.8 14.8-14 18.1C11.8 33.5 6 27.3 6 18.7V9l14-5.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-            <circle cx="18" cy="18" r="6.1" fill="none" stroke="currentColor" stroke-width="2.2"/>
-            <path d="m22.5 22.5 5 5M18 14.8v6.4m-3.2-3.2h6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="17.5" cy="18" r="5.6" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            <path d="m21.6 22 5.2 5.2M17.5 15v6M14.5 18h6M23 13h4m-1.6 0v2.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="27" cy="13" r="1.5" fill="currentColor"/>
           </svg>
           <span class="brand-title">ThreatLens</span>
         </a>
@@ -77,6 +78,51 @@
           <div class="stat-label">Verified Malicious Domains</div>
         </div>
       </div>
+
+      <section class="home-overview" aria-label="Investigation overview">
+        <div class="home-section-heading">
+          <div>
+            <h2>What this investigation checks</h2>
+            <p>Multiple signals help explain risk; no single signal proves a site is safe.</p>
+          </div>
+          <a href="#learn">How to read findings</a>
+        </div>
+        <div class="home-feature-grid">
+          <article class="home-feature">
+            <span class="home-feature-number">01</span>
+            <h3>Domain &amp; reputation</h3>
+            <p>DNS, lookalike patterns, community reports, and available threat feeds.</p>
+          </article>
+          <article class="home-feature">
+            <span class="home-feature-number">02</span>
+            <h3>Web &amp; transport</h3>
+            <p>HTTP security headers, TLS certificate details, and validation limits.</p>
+          </article>
+          <article class="home-feature">
+            <span class="home-feature-number">03</span>
+            <h3>Evidence-led result</h3>
+            <p>Review severity, confidence, source, coverage, and recommended next steps.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="home-registry" aria-labelledby="registry-title">
+        <div class="registry-copy">
+          <div class="registry-heading">
+            <svg class="registry-icon" viewBox="0 0 32 32" aria-hidden="true">
+              <path d="m16 4 9 5v10l-9 5-9-5V9l9-5Zm0 20v5m-9-20 9 5 9-5M16 14v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="16" cy="14" r="2.3" fill="currentColor"/>
+            </svg>
+            <div>
+              <h2 id="registry-title">Report integrity registry</h2>
+              <p id="registry-status" role="status" aria-live="polite">Checking registry connection…</p>
+            </div>
+          </div>
+          <p class="registry-explainer">Community reports stay in the application database. When an EVM registry is connected, an optional commitment records a report hash—not the URL or report contents. A hash helps verify integrity; it does not prove a claim is true.</p>
+          <div id="registry-metadata" class="registry-metadata"></div>
+        </div>
+        <button type="button" class="btn-secondary" id="btn-refresh-registry">Refresh status</button>
+      </section>
 
       <div id="recent-scans-mount"></div>
 

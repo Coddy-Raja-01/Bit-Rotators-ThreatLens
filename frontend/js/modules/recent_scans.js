@@ -21,6 +21,7 @@ export function saveRecentScan(report) {
 
 export async function refreshRecentScans(mount, onSelect) {
   if (!mount) return;
+  const wasOpen = mount.querySelector(".recent-scans")?.open || false;
 
   mount.innerHTML = `
     <details class="recent-scans">
@@ -28,9 +29,14 @@ export async function refreshRecentScans(mount, onSelect) {
         <span>Recent scans</span>
         <span class="recent-scan-count" aria-live="polite">Loading</span>
       </summary>
+      <div class="recent-scans-actions">
+        <span>This clears local shortcuts only; saved reports remain in ThreatLens.</span>
+        <button type="button" class="btn-secondary recent-scans-clear">Clear all</button>
+      </div>
       <div class="recent-scan-list" role="status">Loading recent scans…</div>
     </details>
   `;
+  mount.querySelector(".recent-scans").open = wasOpen;
 
   const list = mount.querySelector(".recent-scan-list");
   const count = mount.querySelector(".recent-scan-count");
@@ -38,22 +44,50 @@ export async function refreshRecentScans(mount, onSelect) {
     const scans = readRecentScans();
 
     count.textContent = String(scans.length);
+    const clearButton = mount.querySelector(".recent-scans-clear");
+    clearButton.hidden = scans.length === 0;
+    clearButton.addEventListener("click", () => {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        refreshRecentScans(mount, onSelect);
+      } catch {
+        list.textContent = "Could not clear recent scans from this browser.";
+        list.setAttribute("role", "alert");
+      }
+    });
+
     if (!scans.length) {
       list.textContent = "No saved scans yet.";
       return;
     }
 
     list.innerHTML = scans.map(scan => `
-      <button type="button" class="recent-scan-item" data-report-id="${escapeHtml(scan.report_id)}">
-        <span class="recent-scan-domain">${escapeHtml(scan.domain || scan.target_url || "Unknown target")}</span>
-        <span class="recent-scan-meta">
-          ${escapeHtml(scan.classification || "Inconclusive")} · ${Number(scan.score) || 0}/100 · ${formatDate(scan.created_at)}
-        </span>
-      </button>
+      <div class="recent-scan-item">
+        <button type="button" class="recent-scan-open" data-report-id="${escapeHtml(scan.report_id)}">
+          <span class="recent-scan-domain">${escapeHtml(scan.domain || "Unknown target")}</span>
+          <span class="recent-scan-meta">
+            ${escapeHtml(scan.classification || "Inconclusive")} · ${Number(scan.score) || 0}/100 · ${formatDate(scan.created_at)}
+          </span>
+        </button>
+        <button type="button" class="recent-scan-remove" data-report-id="${escapeHtml(scan.report_id)}" aria-label="Remove ${escapeHtml(scan.domain || "scan")} from recent scans">Remove</button>
+      </div>
     `).join("");
 
-    list.querySelectorAll(".recent-scan-item").forEach(button => {
+    list.querySelectorAll(".recent-scan-open").forEach(button => {
       button.addEventListener("click", () => onSelect(button.dataset.reportId));
+    });
+    list.querySelectorAll(".recent-scan-remove").forEach(button => {
+      button.addEventListener("click", () => {
+        try {
+          const updated = readRecentScans().filter(scan => scan.report_id !== button.dataset.reportId);
+          if (updated.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          else localStorage.removeItem(STORAGE_KEY);
+          refreshRecentScans(mount, onSelect);
+        } catch {
+          list.textContent = "Could not remove this scan from recent scans.";
+          list.setAttribute("role", "alert");
+        }
+      });
     });
   } catch {
     count.textContent = "Unavailable";
