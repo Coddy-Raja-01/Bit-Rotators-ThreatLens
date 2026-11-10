@@ -1,22 +1,19 @@
 services:
   - type: web
     name: threatlens-api
-    runtime: docker
-    plan: starter
-    dockerfilePath: ./Dockerfile
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/run_server.py
     healthCheckPath: /healthz
     envVars:
       - key: HOST
         value: 0.0.0.0
       - key: THREATLENS_DB_PATH
-        value: /data/threatlens.db
+        value: /tmp/threatlens.db
       - key: SESSION_SECRET
         generateValue: true
       - key: SESSION_COOKIE_SAMESITE
         value: none
       - key: CORS_ALLOWED_ORIGINS
         sync: false
-    disk:
-      name: threatlens-data
-      mountPath: /data
-      sizeGB: 1

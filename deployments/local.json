@@ -1,8 +1,0 @@
-{
-  "network": "Local Anvil Chain",
-  "chainId": 31337,
-  "address": null,
-  "deploymentTx": null,
-  "deployer": null,
-  "rpcUrl": "http://127.0.0.1:8545"
-}
