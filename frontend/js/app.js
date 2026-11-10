@@ -93,7 +93,7 @@ function handleRoute() {
 
 // Authentication Check
 function checkAuth() {
-  fetch("/api/auth/me")
+  window.apiFetch("/api/auth/me")
     .then(res => res.json())
     .then(data => {
       state.currentUser = data.user;
@@ -112,7 +112,7 @@ function renderHeaderAuth() {
       <button class="btn-secondary" id="btn-logout" style="padding:2px 8px; font-size:11px;">Sign Out</button>
     `;
     headerAuthMount.querySelector("#btn-logout")?.addEventListener("click", () => {
-      fetch("/api/auth/logout", { method: "POST" })
+      window.apiFetch("/api/auth/logout", { method: "POST" })
         .then(() => {
           state.currentUser = null;
           renderHeaderAuth();
@@ -128,7 +128,7 @@ function renderHeaderAuth() {
 
 // Global Stats
 function loadStats() {
-  fetch("/api/stats")
+  window.apiFetch("/api/stats")
     .then(res => res.json())
     .then(stats => {
       const elReports = document.querySelector("#stat-reports");
@@ -149,7 +149,7 @@ async function loadRegistryStatus() {
   statusEl.className = "registry-state";
   metadataEl.textContent = "";
   try {
-    const response = await fetch("/api/chain/status/availability");
+    const response = await window.apiFetch("/api/chain/status/availability");
     const data = await response.json();
     if (!response.ok) throw new Error("Status could not be checked.");
     if (!data.connected) {
@@ -207,7 +207,7 @@ function triggerScan(rawUrl) {
   `;
   scanReportMount.scrollIntoView({ behavior: "smooth" });
 
-  fetch("/api/scan", {
+  window.apiFetch("/api/scan", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -253,7 +253,7 @@ function triggerScan(rawUrl) {
 
 async function loadRecentScan(reportId) {
   try {
-    const response = await fetch(`/api/scan/${encodeURIComponent(reportId)}`);
+    const response = await window.apiFetch(`/api/scan/${encodeURIComponent(reportId)}`);
     const report = await response.json();
     if (!response.ok) throw new Error(report.detail || "Could not open this saved scan.");
     state.currentScan = report;
@@ -280,7 +280,7 @@ function setupSubmitThreatForm() {
     const category = document.querySelector("#report-category").value;
     const description = document.querySelector("#report-description").value.trim();
 
-    fetch("/api/reports", {
+    window.apiFetch("/api/reports", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, category, description })
@@ -335,7 +335,7 @@ function setupAuthTabs() {
     const em = document.querySelector("#reg-email").value.trim();
     const p = document.querySelector("#reg-password").value;
 
-    fetch("/api/auth/register", {
+    window.apiFetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: u, email: em, password: p })
@@ -355,7 +355,7 @@ function setupAuthTabs() {
 }
 
 function performLogin(username_or_email, password, onSuccess) {
-  fetch("/api/auth/login", {
+  window.apiFetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username_or_email, password })
@@ -396,7 +396,7 @@ function setupApiKeyManager() {
   const listEl = mount.querySelector("#api-keys-list");
 
   function loadKeys() {
-    fetch("/api/keys")
+    window.apiFetch("/api/keys")
       .then(res => res.json())
       .then(keys => {
         if (!keys || keys.length === 0) {
@@ -430,7 +430,7 @@ function setupApiKeyManager() {
     const keyName = prompt("Enter a label for this API key:", "Production Automation");
     if (!keyName) return;
 
-    fetch("/api/keys", {
+    window.apiFetch("/api/keys", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: keyName })

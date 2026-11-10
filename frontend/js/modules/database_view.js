@@ -55,7 +55,7 @@ export function initDatabaseView(containerEl, onScanTarget) {
     if (catSelect.value !== "all") params.set("category", catSelect.value);
     if (verifiedCheck.checked) params.set("verified_only", "true");
 
-    fetch(`/api/reports?${params.toString()}`)
+    window.apiFetch(`/api/reports?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         renderThreatsTable(tableMount, data, onScanTarget, loadThreats);
@@ -131,7 +131,7 @@ function renderThreatsTable(container, reports, onScanTarget, onRefresh) {
       const voteType = btn.getAttribute("data-type");
       btn.disabled = true;
 
-      fetch(`/api/reports/${repId}/vote`, {
+      window.apiFetch(`/api/reports/${repId}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vote_type: voteType })

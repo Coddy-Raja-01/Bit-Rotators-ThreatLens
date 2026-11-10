@@ -9,7 +9,7 @@ export function renderAiModeStatus() {
 
 export function loadAiModeStatus(containerEl) {
   const statusEl = containerEl.querySelector("#ai-mode-status");
-  fetch("/api/ai/status")
+  window.apiFetch("/api/ai/status")
     .then(response => {
       if (!response.ok) throw new Error(`AI mode status unavailable (${response.status})`);
       return response.json();

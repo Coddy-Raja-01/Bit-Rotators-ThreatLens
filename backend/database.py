@@ -6,7 +6,9 @@ import uuid
 import hashlib
 from pathlib import Path
 import bcrypt
+from backend.config import load_env
 
+load_env()
 DB_PATH = Path(os.getenv("THREATLENS_DB_PATH", Path(__file__).resolve().parent.parent / "threatlens.db"))
 
 def get_db():

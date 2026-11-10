@@ -437,7 +437,7 @@ export function renderScanReport(containerEl, report) {
   commitBtn?.addEventListener("click", async () => {
     commitBtn.disabled = true;
     try {
-      const response = await fetch(`/api/chain/commit/${encodeURIComponent(report.report_id)}`, {
+      const response = await window.apiFetch(`/api/chain/commit/${encodeURIComponent(report.report_id)}`, {
         method: "POST"
       });
       const receipt = await response.json();
@@ -455,7 +455,7 @@ export function renderScanReport(containerEl, report) {
   const verifyIntegrity = async (simulatedTampering) => {
     integrityStatus.textContent = "Verifying report integrity...";
     try {
-      const response = await fetch(
+      const response = await window.apiFetch(
         `/api/chain/verify/${encodeURIComponent(report.report_id)}?simulated_tampering=${simulatedTampering}`,
         { method: "POST" }
       );
@@ -475,7 +475,7 @@ export function renderScanReport(containerEl, report) {
   pdfExportBtn?.addEventListener("click", async () => {
     pdfExportBtn.disabled = true;
     try {
-      const response = await fetch("/api/scan/export/pdf", {
+      const response = await window.apiFetch("/api/scan/export/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(report)

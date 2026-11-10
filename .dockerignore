@@ -3,5 +3,13 @@ __pycache__
 *.py[cod]
 .pytest_cache
 .git
+.env
+.env.*
+!.env.example
 threatlens.db
 data/openphish_feed.txt
+deployments/local.json
+deployments/polygon_amoy.json
+node_modules
+dist
+.vercel

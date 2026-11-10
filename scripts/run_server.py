@@ -6,9 +6,13 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root_dir))
 
-import uvicorn
-from backend.database import init_db
-from backend.ml.train import train
+from backend.config import load_env  # noqa: E402
+
+load_env()
+
+import uvicorn  # noqa: E402
+from backend.database import init_db  # noqa: E402
+from backend.ml.train import train  # noqa: E402
 
 if __name__ == "__main__":
     print("=" * 60)

@@ -5,6 +5,8 @@ __pycache__/
 .venv/
 .pytest_cache/
 .env
+.env.*
+!.env.example
 .DS_Store
 *.log
 *.tmp
@@ -15,3 +17,5 @@ threatlens.db-wal
 data/openphish_feed.txt
 deployments/local.json
 deployments/polygon_amoy.json
+/dist/
+/.vercel/

@@ -49,6 +49,9 @@ init_db()
 seed_demo_campaigns()
 _SESSION_SECRET = os.getenv("SESSION_SECRET", "").encode("utf-8") or secrets.token_bytes(32)
 _SESSION_TTL_SECONDS = 12 * 60 * 60
+_SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "lax").strip().lower()
+if _SESSION_COOKIE_SAMESITE not in {"lax", "strict", "none"}:
+    raise ValueError("SESSION_COOKIE_SAMESITE must be lax, strict, or none.")
 
 
 def _create_session_token(user_id: int) -> str:
@@ -117,6 +120,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/healthz", include_in_schema=False)
+def health_check():
+    return {"status": "ok"}
 
 # Security headers middleware on the platform itself
 @app.middleware("http")
@@ -509,8 +516,8 @@ def register(req: RegisterRequest, response: Response, request: Request):
         key="tl_session",
         value=session_token,
         httponly=True,
-        secure=request.url.scheme == "https",
-        samesite="lax",
+        secure=request.url.scheme == "https" or _SESSION_COOKIE_SAMESITE == "none",
+        samesite=_SESSION_COOKIE_SAMESITE,
         max_age=_SESSION_TTL_SECONDS,
     )
     return {"success": True, "user": user, "token": session_token}
@@ -527,16 +534,20 @@ def login(req: LoginRequest, response: Response, request: Request):
         key="tl_session",
         value=session_token,
         httponly=True,
-        secure=request.url.scheme == "https",
-        samesite="lax",
+        secure=request.url.scheme == "https" or _SESSION_COOKIE_SAMESITE == "none",
+        samesite=_SESSION_COOKIE_SAMESITE,
         max_age=_SESSION_TTL_SECONDS,
     )
     return {"success": True, "user": user, "token": session_token}
 
 @app.post("/api/auth/logout")
-def logout(response: Response):
+def logout(response: Response, request: Request):
     """Clear session cookie."""
-    response.delete_cookie("tl_session")
+    response.delete_cookie(
+        "tl_session",
+        secure=request.url.scheme == "https" or _SESSION_COOKIE_SAMESITE == "none",
+        samesite=_SESSION_COOKIE_SAMESITE,
+    )
     return {"success": True}
 
 @app.get("/api/auth/me")

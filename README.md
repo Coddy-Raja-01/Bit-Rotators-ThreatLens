@@ -1,324 +1,138 @@
 # ThreatLens
 
-A phishing and malicious website detection platform that combines threat analysis, web security headers, certificate validation, and community intelligence into a unified report.
+## 1. Project name and one-line description
 
----
+ThreatLens investigates suspicious URLs and presents evidence from domain, web-security, TLS, and threat-intelligence checks.
 
-## 1. Problem Statement
+## 2. Problem
 
-The internet relies on trust in Certificate Authorities and secure transport. However, having a green padlock or active HTTPS does not prove a site is legitimate:
-- Phishing sites routinely obtain free TLS certificates.
-- Public CA distrust incidents show why certificate provenance matters. A URL-only inspection cannot determine how a Certificate Authority generated private keys.
-- Existing tools are fragmented: an analyst must check one tool for DNS and typosquatting, another for HTTP security headers, a third for Certificate Transparency logs, and another for threat feeds.
+HTTPS and a valid certificate do not establish that a website is legitimate. Investigation signals are spread across DNS, certificate data, security headers, threat feeds, and community reports. ThreatLens puts the available findings and their limitations into one report.
 
-ThreatLens brings all four pillars into one unified assessment and produces a plain-English score and evidence breakdown.
+## 3. Solution
 
----
+ThreatLens accepts a URL and returns an evidence-led assessment. Depending on availability and authorization, checks include URL and lookalike analysis, DNS and reputation signals, TLS details, HTTP security headers, threat-intelligence matches, and static page or redirect inspection. The app also includes community reports, watchlists, PDF export, and a REST API.
 
-## 2. Key Features
+The optional EVM registry stores report commitments (hashes), not raw URLs or report contents. A commitment can help check whether a report changed; it does not prove that the report's claims are true. The included Docker demo uses a local Anvil chain. A public-chain deployment is not configured by default.
 
-1. **Unified Risk Score (0–100)**: Combines all four modules into a single score with a "Why this verdict" list explaining each piece of evidence and its score contribution.
-2. **Lookalike Domain & Homoglyph Detector**: Detects typosquatting, character omissions, visual substitutions (e.g. `rn` vs `m`, `0` vs `o`), and Unicode/Cyrillic homoglyphs against an offline database of 120+ top banks, payment processors, universities, and government portals. Displays side-by-side comparisons with differing characters highlighted.
-3. **Certificate Transparency (CT) Timeline**: Queries public CT logs for historical issuance records and displays returned certificates.
-4. **Weak Key & Algorithm Check**: Flags RSA keys smaller than 2048 bits and deprecated MD5/SHA-1 signatures. It does not infer a CA's internal key-generation properties.
-5. **Redirect Chain Tracer**: Safely traces HTTP redirect hops, detects protocol downgrades (HTTPS -> HTTP), tracks cross-domain hops, and provides a 3D spatial path view.
-6. **Static Content Inspector**: Parses server-side HTML (without running untrusted JavaScript) to detect forms posting passwords to external domains, hidden 0-pixel iframes, obfuscated JavaScript, and social engineering text.
-7. **Security Header & TLS Grade**: Evaluates HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and cookie flags to assign an A–F grade.
-8. **Technology Fingerprinting**: Identifies server and CMS versions and cross-references them against a local list of known unpatched vulnerabilities (CVEs).
-9. **Collaborative Threat Intelligence**: Community members report suspicious URLs. Reports with net 3 confirmations become verified, which automatically elevates the domain's risk score.
-10. **Public Threat Database**: Searchable and filterable registry of reported and verified phishing domains with direct "Scan" capabilities.
-11. **Watchlist & Automated Alerts**: Monitors user-specified domains on a schedule and notifies when certificates change, expire soon (<=14 days), or get reported.
-12. **Downloadable Reports**: Export any scan result as an executive PDF document (via ReportLab) or raw JSON.
-13. **Functional 3D Views**: Interactive 3D Trust Chain Explorer and 3D Redirect Path visualizer using locally bundled Three.js with flat utilitarian styling and 2D accessible table fallbacks.
-14. **Public REST API**: Programmatic endpoints with API key authentication, rate limits, and interactive Swagger documentation.
+## 4. Demo links and screenshot
 
----
+- **Local application:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/) after completing the setup below.
+- **Local API documentation:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+- **Public demo:** Not deployed at the time this README was written.
+- **Screenshot:** No application screenshot is committed in this repository yet.
 
-## 3. Project Structure
+Do not treat the local URL as a public demo link. Add a real, accessible deployment URL and a current screenshot here after deployment.
 
-```
-threatlens/
-├── README.md                  # Complete documentation and run instructions
-├── .env.example               # Environment variables template
-├── requirements.txt           # Python dependency requirements
-├── threatlens.db              # SQLite database (auto-created on startup)
-├── backend/
-│   ├── main.py                # FastAPI application and REST endpoints
-│   ├── database.py            # SQLite schema, queries, and auth helpers
-│   ├── scheduler.py           # Watchlist monitoring and alert engine
-│   ├── scanners/
-│   │   ├── ssrf.py            # Strict SSRF guard and DNS resolver
-│   │   ├── lookalike.py       # Typosquatting and homoglyph detector
-│   │   ├── redirects.py       # Safe hop tracer with protocol checks
-│   │   ├── content.py         # Static HTML/DOM/script analyzer
-│   │   ├── security_headers.py# Header evaluator and A-F grading
-│   │   ├── certificate.py     # TLS chain, weak key, and CT log inspector
-│   │   ├── fingerprint.py     # Server version & CVE matcher
-│   │   ├── intel.py           # External threat feed aggregator
-│   │   ├── scoring.py         # Unified 0-100 risk score engine
-│   │   └── coordinator.py     # Multi-module scan coordinator
-│   ├── ml/
-│   │   ├── features.py        # 15 lexical and structural URL features
-│   │   ├── classifier.py      # Random Forest classifier + rule fallback
-│   │   ├── train.py           # Model training pipeline
-│   │   └── model.joblib       # SHA-256 verified scikit-learn model
-│   ├── reports/
-│   │   └── exporter.py        # ReportLab PDF report generator
-│   └── tests/
-│       └── test_all.py        # Complete automated test suite
-├── frontend/
-│   ├── index.html             # Human-crafted HTML shell
-│   ├── css/
-│   │   └── style.css          # Utilitarian CSS (0 gradients, 5 colors)
-│   └── js/
-│       ├── app.js             # Client controller, navigation, routing
-│       ├── vendor/
-│       │   ├── three.min.js   # Three.js bundled locally (no CDN)
-│       └── modules/
-│           ├── scanner.js     # Scan tab renderer and evidence tables
-│           ├── trust_chain_3d.js # 3D Trust Chain Explorer + 2D fallback
-│           ├── redirect_3d.js # 3D Redirect Path view + 2D fallback
-│           ├── database_view.js # Threat database and voting interface
-│           └── watchlist.js   # Watchlist management and alert list
-├── data/
-│   ├── brands.json            # 50+ canonical brand identities
-│   ├── sample_urls.csv        # 475 labeled URLs for ML training
-│   └── vulnerable_versions.json # Known vulnerable server & CMS versions
-└── scripts/
-    ├── run_server.py          # One-command startup script
-    ├── seed_database.py       # Seeds demo user and sample reports
-    └── train_model.py         # Retrains the Random Forest classifier
+## 5. Tech stack
+
+- Python, FastAPI, and Uvicorn for the API and locally served app.
+- Vanilla HTML, CSS, and JavaScript for the frontend; Three.js is bundled locally for the 3D views.
+- SQLite for local and single-instance persistent storage.
+- scikit-learn for the URL classifier, with heuristic fallback.
+- `cryptography`, `requests`, Beautiful Soup, and ReportLab for inspection and report generation.
+- Solidity `ThreatRegistry`, web3.py, and Foundry Anvil for optional EVM report commitments.
+- Docker Compose for the local app-plus-chain demo; Render and Vercel configuration is included for a split deployment.
+
+The complete Python dependency list is in [requirements.txt](./requirements.txt). The frontend build has no third-party npm dependencies.
+
+## 6. Architecture
+
+```text
+Browser
+  ├─ Vercel static frontend (or FastAPI-served frontend locally)
+  └─ HTTPS API requests
+       └─ Render FastAPI service
+            ├─ scanners and optional intelligence/AI providers
+            ├─ SQLite database on a Render persistent disk
+            └─ optional EVM JSON-RPC provider → ThreatRegistry contract
 ```
 
----
+In the split deployment, Vercel builds the static files and embeds `THREATLENS_API_BASE_URL`. The browser calls the Render API directly, so the Render service must allow the exact Vercel origin in `CORS_ALLOWED_ORIGINS`. Browser session cookies require credentialed requests. The Render Blueprint sets `SESSION_COOKIE_SAMESITE=none` for the default cross-site domains and marks the cookie Secure; browsers that block third-party cookies may still prevent sign-in. Prefer Vercel and Render custom domains under the same registrable domain, then use `SESSION_COOKIE_SAMESITE=lax`.
 
-## 4. Setup & Run Instructions
+The Render configuration uses SQLite and a persistent disk, which requires a paid Render plan. SQLite on one persistent disk is a single-instance setup; it is not configured for horizontally scaled web instances.
 
-### Prerequisites
-- Python 3.10, 3.11, 3.12, or 3.13
-- A modern web browser (Chrome, Firefox, Edge, Safari)
-- Docker Desktop (for the app-integrated local Ethereum chain)
+## 7. Setup and run
 
-### Step 1: Install Dependencies
-Open your terminal inside the `threatlens/` folder:
+### Local Python app
 
-**Windows (PowerShell or Command Prompt):**
+Requirements: Python 3.10+ and a modern browser.
+
 ```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+python scripts/run_server.py
 ```
 
-**macOS / Linux:**
-```bash
-python3 -m pip install -r requirements.txt
-```
+Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/). The app runs without external API keys; optional providers may be unconfigured or unavailable. To use the local EVM registry as well, run the Docker Compose setup instead.
 
-### Step 2: Initialize Database and Seed Sample Data (Optional)
-To pre-populate demo community threat reports:
-```bash
-python scripts/seed_database.py
-```
-Create an account in the application to use the watchlist. To seed a demo account, set a unique `DEMO_PASSWORD` in the environment before running the seeder.
+### Local app and Anvil chain
 
-### Step 3: Run the Application
-Start the app and local Anvil chain. The app deploys `ThreatRegistry.sol` automatically:
-```bash
+Requirements: Docker Desktop with its engine running.
+
+```powershell
 docker compose up --build
 ```
-To run only the HTTP app without the chain, use `python scripts/run_server.py`; the integrity endpoints require a configured and deployed RPC contract.
 
-Open your browser to:
-- **Web Application**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-- **Interactive REST API Docs (Swagger)**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+The Compose setup starts Anvil and the app. On chain ID `31337`, the app startup script deploys the contract when deployment metadata is absent. This is a local development chain, not a public network; its chain state is temporary. Stop the services with `Ctrl+C`, or run `docker compose down`.
 
----
+### Deploy the API to Render
 
-## 5. Environment Configuration (.env)
+1. Push this repository to a Git provider connected to Render.
+2. Create a Render Blueprint from the repository and review [render.yaml](./render.yaml). The included SQLite persistent disk requires a paid plan and incurs hosting cost.
+3. Set `CORS_ALLOWED_ORIGINS` to the planned Vercel origin (scheme and hostname, no path); update it to the exact origin after the frontend is deployed.
+4. Deploy and wait for `https://<your-render-service>/healthz` to return `{"status":"ok"}`.
+5. Add optional API keys in the Render environment settings, not in source control.
 
-ThreatLens runs fully offline using local heuristics, trained models, and local datasets. To enable optional live external intelligence feeds:
+Render's `SESSION_SECRET` is generated by the Blueprint. The SQLite database is stored at `/data/threatlens.db`.
 
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Add your API keys:
-   - `VIRUSTOTAL_API_KEY`: API key from VirusTotal.
-   - `SAFE_BROWSING_API_KEY`: API key for Google Safe Browsing v4.
-   - `PORT`: Change port if `8000` is in use.
-   - `SESSION_SECRET`: Set a unique random value for stable signed sessions; an unset value rotates sessions at each server restart.
-   - `CORS_ALLOWED_ORIGINS`: Comma-separated exact browser origins. Do not use `*` with credentialed requests.
+### Deploy the frontend to Vercel
 
-If left empty, ThreatLens degrades gracefully and performs all inspections with internal detectors.
-OpenPhish refreshes a disk cache at most hourly and falls back to the bundled CSV feed. Set `PHISHTANK_API_KEY` to enable the optional PhishTank check.
+1. Import the same repository into Vercel and use the repository root as the project root.
+2. Set the build command to `npm run build` and the output directory to `dist`.
+3. Set `THREATLENS_API_BASE_URL` to the Render API origin, for example `https://your-service.onrender.com` (no trailing path or slash).
+4. Deploy, then set the exact resulting Vercel origin in the Render `CORS_ALLOWED_ORIGINS` environment variable and redeploy/restart the API. Cross-origin browser requests will fail until this origin is allowed.
+5. Open the Vercel URL and test sign-in, a scan, PDF export, and `GET /healthz` on the API.
 
----
+The Vercel build fails if `THREATLENS_API_BASE_URL` is missing or is not HTTPS. This prevents a successful-looking frontend deployment that still points its API requests at Vercel itself.
 
-## 6. Training the ML Model
+### Verification
 
-The Random Forest model is trained on structural and lexical features from `data/sample_urls.csv`. To retrain the model on new data:
+Run the backend tests and compile check from the repository root:
 
-1. Add your new labeled samples to `data/sample_urls.csv` (format: `url,label` where 1 = phishing, 0 = benign).
-2. Run the training script:
-   ```bash
-   python scripts/train_model.py
-   ```
-3. The script evaluates training accuracy and writes `backend/ml/model.joblib` with a `.sha256` sidecar. If the artifact is missing or fails integrity validation, ThreatLens falls back to its built-in rule-based heuristic engine.
-
-Redirect-chain and HTML-content inspection are skipped unless the scanner form's authorization checkbox is selected. DNS, lexical analysis, threat intelligence, HTTP headers, and TLS inspection continue without that consent.
-
----
-
-## 7. How the Risk Score is Calculated
-
-The Unified Risk Score is a cumulative 0–100 index used alongside a five-class evidence assessment: **Low Risk**, **Suspicious**, **High Risk**, **Confirmed Malicious**, or **Inconclusive**. A low score does not establish that a website is legitimate.
-
-### Point Contributions:
-| Module | Detection Signal | Penalty |
-|---|---|---|
-| **Threat Analysis** | Machine Learning Phishing Probability >= 85% | +35 pts |
-| **Threat Analysis** | Lookalike Brand Impersonation / Homoglyph | +35 pts |
-| **Threat Analysis** | Password form submitting to foreign domain | +30 pts |
-| **Threat Analysis** | Insecure Protocol Downgrade (HTTPS -> HTTP) | +20 pts |
-| **Threat Analysis** | Obfuscated Client JavaScript (`eval`, hex array) | +15 pts |
-| **Threat Analysis** | Title Brand Mismatch (Title claims brand, domain differs) | +25 pts |
-| **Web Security** | Missing critical security headers (Grade 'F') | +20 pts |
-| **Web Security** | Outdated software with critical unpatched CVEs | +25 pts |
-| **Certificate** | No TLS / Plaintext HTTP | +30 pts |
-| **Certificate** | Weak RSA Key (< 2048-bit) or SHA-1 signature | +20 pts |
-| **Certificate** | Self-signed or expired certificate | +25 pts |
-| **Community Intel** | Verified by community consensus (>= 3 confirms) | +30 pts |
-| **External Feeds** | Flagged by VirusTotal / Safe Browsing / URLhaus | +30 pts |
-
-Every point added is listed explicitly in the report's **"Why this verdict"** evidence table.
-
----
-
-## 8. REST API Reference
-
-All requests accept and return JSON. Authenticated endpoints accept `Authorization: Bearer <token_or_api_key>` or session cookies.
-
-### 1. Run a Scan
-- **Endpoint**: `POST /api/scan`
-- **Body**: `{"url": "https://example.com", "authorized_target": false}`
-- Complete reports, including coverage and limitations, are retained by report ID and are available from `GET /api/scan/{report_id}`.
-- **Example**:
-  ```bash
-  curl -X POST "http://127.0.0.1:8000/api/scan" \
-       -H "Content-Type: application/json" \
-       -d '{"url": "http://rnicrosoft-login.net"}'
-  ```
-
-### 2. Export Scan Report
-- **PDF Export**: `POST /api/scan/export/pdf` with the scan report as the JSON body.
-- **JSON Export**: The web UI downloads the scan report locally.
-
-### 3. Lookalike Domain Check
-- **Endpoint**: `GET /api/lookalike?domain=paypa1.com`
-- **Returns**: Suspicious domain, matched brand, canonical domain, diff segments, and similarity score.
-
-### 4. Intelligence and AI Status
-- **Intelligence sources**: `GET /api/intel/sources` returns provider configuration and cached OpenPhish freshness/record count.
-- **AI mode**: `GET /api/ai/status` reports the configured local, Ollama, or external provider mode.
-- URLhaus queries require `URLHAUS_API_KEY` (`Auth-Key`). Unconfigured sources are shown as unavailable, not clean.
-
-### 5. Community Threat Reports
-- **List Reports**: `GET /api/reports?category=banking&verified_only=true`
-- **Submit Report**: `POST /api/reports`
-  ```bash
-  curl -X POST "http://127.0.0.1:8000/api/reports" \
-       -H "Content-Type: application/json" \
-       -d '{"url": "http://bad-link.com", "category": "banking", "description": "SMS phishing card lockout"}'
-  ```
-- **Vote on Report**: `POST /api/reports/{id}/vote` with `{"vote_type": "confirm"}` or `{"vote_type": "dispute"}`
-
-### 6. Watchlist & Alerts
-- **List Watched Domains**: `GET /api/watchlist`
-- **Add Domain**: `POST /api/watchlist` with `{"domain": "mybank.com"}`
-- **Delete Domain**: `DELETE /api/watchlist/{id}`
-- **Trigger Immediate Re-audit**: `POST /api/watchlist/check-now`
-- **Get Alerts**: `GET /api/alerts?unread_only=true`
-
----
-
-## 9. Platform Security Controls
-
-To ensure ThreatLens itself is not exploited when analyzing untrusted websites:
-1. **SSRF Guard**:
-   - The scanner refuses connections to `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `0.0.0.0`, `::1`, and cloud metadata hosts (`metadata.google.internal`).
-   - DNS resolution is performed first, and every returned IP is checked against disallow-lists before connection and after every authorized HTTP redirect. Target requests are pinned to the validated IP.
-2. **No Untrusted JavaScript Execution**:
-   - Webpages are fetched as static text payloads with strict timeouts (5 seconds) and strict size limits (2MB).
-   - Scripts are never executed or rendered in a browser engine. Static regex and DOM analysis inspects code structure safely.
-3. **Application Hardening**:
-   - Parameterized SQL queries prevent SQL injection.
-   - Passwords hashed with `bcrypt` (12 rounds).
-   - API keys are hashed with SHA-256 before storage.
-   - HTTP response headers on the platform: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and strict `Referrer-Policy`.
-
----
-
-## 10. Automated Testing
-
-Run the automated test suite and Python compile check:
-
-```powershell
-.\scripts\check_all.ps1
-```
-
-Alternatively:
 ```powershell
 python -m unittest backend.tests.test_all
 python -m compileall -q backend scripts
 ```
 
-The suite covers SSRF protection, pinned connections, scan authorization, lookalike detection, ML features, risk scoring, and community consensus.
+The repository also includes `scripts/check_all.ps1` for the project's combined checks. A successful local test run does not replace testing the actual Render/Vercel configuration, secrets, CORS origin, persistent disk, or any external provider credentials.
 
-## 11. Browser Extension
+## 8. Disclosures
 
-Load the `extension/` folder as an unpacked Manifest V3 extension in Chrome or Edge. Start ThreatLens locally, enter the URL in the popup, and inspect the evidence summary. The extension sends requests only to `127.0.0.1:8000`; redirect and page-content inspection remain opt-in.
+### Configuration and API keys
 
-## 12. Docker
+`.env.example` lists the runtime settings and optional provider keys used by the code. Copy it to `.env` for local work; never commit `.env` or real credentials. On Render, Vercel, or another host, set variables in that provider's environment settings.
 
-Run the app and its local Anvil chain; the app waits for the chain, deploys `ThreatRegistry.sol` if needed, and starts only after the deployed bytecode is verified:
-```powershell
-docker compose up --build
-```
+Threat-intelligence API keys are optional: `URLHAUS_API_KEY`, `PHISHTANK_API_KEY`, `SAFE_BROWSING_API_KEY`, and `VIRUSTOTAL_API_KEY`. OpenPhish is configured through `OPENPHISH_FEED_URL` and can use a cached feed. AI provider keys are optional and are only used when `USE_EXTERNAL_AI=true`. Blank keys mean those external providers are not configured; they do not imply a clean result.
 
-The app is available at `http://127.0.0.1:8000`; Anvil JSON-RPC is available at `http://127.0.0.1:8545`. Check the live contract with `GET /api/chain/status`. Contract transactions are recorded on the local chain; this local chain is ephemeral unless you configure persistent Anvil state.
+The Web3 integration is also optional. A hosted registry needs a reachable `WEB3_PROVIDER_URI`, deployed `THREAT_REGISTRY_ADDRESS`, and a funded/authorized transaction signer (`WEB3_RELAYER_PRIVATE_KEY` or an unlocked RPC account). Keep signing keys in the hosting provider's secret store. Never use Anvil's published test accounts or keys for real funds. Without a configured chain and contract, registry functions remain unavailable.
 
-To compile the Solidity source and regenerate its ABI/bytecode artifact:
-```powershell
-python scripts/compile_contract.py
-```
+### Safety and limitations
 
-To deploy manually to another unlocked development RPC:
-```powershell
-$env:WEB3_PROVIDER_URI="http://127.0.0.1:8545"
-python scripts/deploy_contract.py
-```
-For a public network, set `THREAT_REGISTRY_ADDRESS` and `WEB3_RELAYER_PRIVATE_KEY` securely outside source control. The contract stores hashes and opaque report IDs only; it does not establish whether the report is true.
+- Redirect and page-content checks require the user to confirm authorization. Retrieved scripts are not executed.
+- A low score or an absence of findings is not proof that a site is safe.
+- External feeds and provider APIs can be unavailable, stale, rate-limited, or subject to their own terms and limits.
+- AI output is an optional explanation layer, not a substitute for evidence or analyst review.
+- TLS results are limited by the certificate chain and revocation data actually available to the scanner. A certificate alone does not establish site legitimacy.
+- The local Anvil chain demonstrates contract interaction but does not provide public-network decentralization or durable public consensus.
 
-## 13. Troubleshooting
+### Libraries, assets, and AI assistance
 
-- **Port 8000 already in use**:
-  Set the `PORT` environment variable before starting:
-  ```powershell
-  $env:PORT="8080"; python scripts/run_server.py
-  ```
-- **Domain shows "No active DNS resolution"**:
-  If a phishing domain was suspended by its registrar, ThreatLens gracefully marks the host as offline while still evaluating its lexical markers, lookalike properties, and community reports.
-- **3D Canvas displays fallback table**:
-  If your browser or virtual environment does not support WebGL, ThreatLens automatically renders the structured 2D comparison table.
+The project uses the libraries listed in [requirements.txt](./requirements.txt), plus locally bundled Three.js in `frontend/js/vendor/`. The Solidity contract and application UI are part of this repository. No public production deployment or third-party UI template is claimed here.
 
----
+GitHub Copilot was used as AI coding assistance during development. Generated code and documentation should be reviewed and tested by the project maintainers. Threat intelligence, model behavior, and contract behavior should be evaluated before production use.
 
-## 14. Limitations & Future Improvements
+## 9. Track
 
-- **Limitations**:
-  - Static analysis cannot detect payloads rendered solely through client-side React/Vue SPAs that make dynamic authenticated AJAX calls after execution.
-  - RDAP and live threat-feed checks depend on external service availability; offline bundled threat indicators remain available when those services cannot be reached.
-  - TLS inspection reports the presented leaf certificate. If a trusted issuer cannot be established, chain status is `Not verified`; revocation is not checked and is never assumed good.
-  - A TLS handshake or valid certificate does not establish that a domain is legitimate. Incomplete chains are not filled with inferred intermediate or root certificates.
-- **Future Improvements**:
-  - Sandboxed headless browser screenshot generator running inside an isolated container with no LAN access.
-  - Automated BGP prefix hijacking and DNS route leak detection.
-  - Passive DNS historical query integration.
+**HackMatrix — cybersecurity-focused phishing and malicious-site investigation.** The project also demonstrates optional local AI explanations and EVM report-integrity commitments; these are supporting capabilities, not claims of a production-grade autonomous security service or a public decentralized deployment.

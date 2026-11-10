@@ -82,7 +82,7 @@ export function initWatchlistView(containerEl, currentUser, onRequireAuth) {
   const clearAlertsBtn = containerEl.querySelector("#btn-clear-alerts");
 
   function loadWatchlist() {
-    fetch("/api/watchlist")
+    window.apiFetch("/api/watchlist")
       .then(res => res.json())
       .then(items => {
         renderWatchlistTable(tableMount, items, loadWatchlist);
@@ -92,7 +92,7 @@ export function initWatchlistView(containerEl, currentUser, onRequireAuth) {
       });
 
     // Load alerts
-    fetch("/api/alerts?unread_only=true")
+    window.apiFetch("/api/alerts?unread_only=true")
       .then(res => res.json())
       .then(alerts => {
         if (alerts && alerts.length > 0) {
@@ -110,7 +110,7 @@ export function initWatchlistView(containerEl, currentUser, onRequireAuth) {
     const d = domainInput.value.trim();
     if (!d) return;
 
-    fetch("/api/watchlist", {
+    window.apiFetch("/api/watchlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ domain: d })
@@ -132,7 +132,7 @@ export function initWatchlistView(containerEl, currentUser, onRequireAuth) {
   recheckBtn.addEventListener("click", () => {
     recheckBtn.disabled = true;
     recheckBtn.textContent = "Checking...";
-    fetch("/api/watchlist/check-now", { method: "POST" })
+    window.apiFetch("/api/watchlist/check-now", { method: "POST" })
       .then(res => res.json())
       .then(res => {
         alert(`Audit finished: Checked ${res.domains_checked} domains. Generated ${res.new_alerts_created} new alerts.`);
@@ -146,7 +146,7 @@ export function initWatchlistView(containerEl, currentUser, onRequireAuth) {
   });
 
   clearAlertsBtn.addEventListener("click", () => {
-    fetch("/api/alerts/read", { method: "POST" })
+    window.apiFetch("/api/alerts/read", { method: "POST" })
       .then(res => res.json())
       .then(() => loadWatchlist());
   });
@@ -201,7 +201,7 @@ function renderWatchlistTable(container, items, onRefresh) {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-id");
       if (!confirm("Remove this domain from watchlist?")) return;
-      fetch(`/api/watchlist/${id}`, { method: "DELETE" })
+      window.apiFetch(`/api/watchlist/${id}`, { method: "DELETE" })
         .then(res => res.json())
         .then(() => onRefresh())
         .catch(err => alert("Error removing domain: " + err.message));
